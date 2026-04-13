@@ -2,11 +2,11 @@
 
 A Claude Code plugin that runs an agentic newsroom. Pitch a topic and a team of 10 specialist agents -- orchestrated by an Editor -- interrogates the idea, researches it, writes it, fact-checks it, and delivers a polished trade media article to Google Docs.
 
-First deployment target: **Mutinex**.
+Install once, run in any directory. Each directory is a separate newsroom with its own publication config, journalist voices, and workspaces.
 
 ## Prerequisites
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with this repo open as a project
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
 - Google Drive MCP configured (for final article push to Google Docs)
 
 ## Quick Start
@@ -15,19 +15,19 @@ First deployment target: **Mutinex**.
 /newsroom
 ```
 
-Claude will ask for your pitch. The Editor takes over from there: Strategy Q&A with you, brief creation, parallel research, drafting, revision, fact-checking, and final delivery.
+On first run, the plugin creates the `newsroom/` directory structure and a publication config template. Fill in your brand details, then run `/newsroom` again to start a session.
 
-To use a specific journalist voice:
+To use a specific publication and journalist voice:
 
 ```
-/newsroom --journalist jane-smith
+/newsroom --publication acme --journalist jane-smith
 ```
 
 ## Slash Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/newsroom [--journalist <name>]` | Start a new session. Pitch a topic, produce an article. |
+| `/newsroom [--journalist <name>] [--publication <name>]` | Start a new session. Pitch a topic, produce an article. |
 | `/newsroom-resume [workspace-path]` | Resume an interrupted session. Auto-detects the most recent workspace, or provide a specific path. |
 | `/newsroom-seed-journalist <name>` | Create a journalist voice profile from reference articles and style guidance. |
 | `/newsroom-refine-journalist <name>` | Refine an existing voice profile with new material or corrections. |
@@ -82,80 +82,72 @@ The Editor orchestrates the entire pipeline. It gates every transition -- sendin
 | **Journalist** | Writes drafts following the brief structure. Supports voice profiles. Revises based on Editor feedback. |
 | **Fact Checker** | Compares the draft against research. Line-by-line pass/flag/fail for every substantive claim. |
 
-## Session Workspace
+## Running Multiple Newsrooms
 
-Each session creates a workspace at `newsroom/workspaces/{date}-{slug}/` containing:
+Each directory where you run `/newsroom` is an independent newsroom. The plugin creates a `newsroom/` folder in your working directory with its own:
 
-```
-00-pitch.md              # Raw pitch
-01-strategy.md           # Strategist Q&A + validated topic
-02-brief.md              # Architect's structured brief
-03-research/             # All research outputs
-  data-research.md
-  industry-research.md
-  counter-arguments.md
-  commentary-research.md
-  research-package.md    # Synthesized findings
-  sources.md             # Consolidated references
-  gaps.md                # Where research was inconclusive
-04-draft-v1.md           # First draft (v2, v3... for revisions)
-05-fact-check.md         # Verification report
-06-final.md              # Final approved article
-session-state.json       # Workflow state (for resume)
-session-log.md           # Full audit trail of decisions
-```
+- **Publications** -- brand configs specific to that newsroom
+- **Content types** -- article structure definitions
+- **Journalist voices** -- voice profiles for that newsroom's writers
+- **Workspaces** -- session artifacts and audit trails
 
-Everything is Markdown. The full audit trail lives in the workspace.
-
-## Configuration
-
-### Publications
-
-Publication configs live in `newsroom/publications/`. Each defines brand voice, audience, content pillars, terminology, and style rules. Mutinex is scaffolded as the first publication (`newsroom/publications/mutinex.md`).
-
-### Content Types
-
-Content type definitions live in `newsroom/content-types/`. These define structure and conventions for each article format. Trade media article is the v1 content type (`newsroom/content-types/trade-media-article.md`).
-
-### Journalist Voices
-
-Voice profiles live in `newsroom/journalists/`. Create them with `/newsroom-seed-journalist` from reference articles, then refine with `/newsroom-refine-journalist`. If no journalist is specified, the system uses a base professional voice.
-
-## Project Structure
+Example setup for two brands:
 
 ```
-.claude-plugin/
-  plugin.json                          # Plugin metadata
-commands/
-  newsroom.md                          # /newsroom entry point
-  newsroom-resume.md                   # /newsroom-resume
-  newsroom-seed-journalist.md          # /newsroom-seed-journalist
-  newsroom-refine-journalist.md        # /newsroom-refine-journalist
-agents/
-  editor.md                            # Orchestrator (~1035 lines)
-  strategist.md                        # Socratic interrogation
-  architect.md                         # Brief creation
-  research-lead.md                     # Research coordination
-  data-researcher.md                   # Data/statistics research
-  industry-researcher.md               # Industry landscape research
-  counter-argument-researcher.md       # Counter-argument research
-  commentary-researcher.md             # Expert commentary research
-  journalist.md                        # Article drafting
-  fact-checker.md                      # Fact verification
+~/brands/acme-content/         # cd here, run /newsroom
+  newsroom/
+    publications/acme.md
+    journalists/sarah.md
+    workspaces/...
+
+~/brands/widget-corp/          # cd here, run /newsroom
+  newsroom/
+    publications/widget-corp.md
+    journalists/mark.md
+    workspaces/...
+```
+
+## Directory Structure
+
+### Plugin (installed, read-only)
+
+```
+.claude-plugin/plugin.json       # Plugin metadata
+commands/                        # Slash commands
+agents/                          # Agent prompts (10 files)
+references/                      # Bundled templates
+  publication-template.md        # Example publication config
+  trade-media-article.md         # Default content type definition
+```
+
+### Working Directory (created at runtime)
+
+```
 newsroom/
-  publications/                        # Publication configs
-    mutinex.md                         # Mutinex (scaffolded)
-  content-types/                       # Content type definitions
-    trade-media-article.md             # Trade media article
-  journalists/                         # Voice profiles (created at runtime)
-  workspaces/                          # Session workspaces (created at runtime)
+  publications/                  # Your brand configs
+    _template.md                 # Copied from plugin on first run
+    your-brand.md                # Created by you
+  content-types/                 # Article structure definitions
+    trade-media-article.md       # Copied from plugin on first run
+  journalists/                   # Voice profiles (created by /newsroom-seed-journalist)
+  workspaces/                    # Session workspaces (created per /newsroom run)
+    2026-04-13-topic-slug/
+      00-pitch.md
+      01-strategy.md
+      02-brief.md
+      03-research/
+      04-draft-v1.md
+      05-fact-check.md
+      06-final.md
+      session-state.json
+      session-log.md
 ```
 
 ## Architecture
 
 This is a prompt-engineering project. Every deliverable is a Markdown file -- there is no application code. Each agent is a `.md` system prompt file that Claude Code loads as context.
 
-The `/newsroom` command does minimal setup (creates workspace, captures pitch) then spawns the Editor agent via `Task`. The Editor contains the entire workflow as a state machine and uses `Task` to spawn other agents as subagents. All inter-agent communication happens via files on disk in the workspace folder.
+The `/newsroom` command does minimal setup (scaffolds directories if needed, creates workspace, captures pitch) then spawns the Editor agent via `Task`. The Editor contains the entire workflow as a state machine and uses `Task` to spawn other agents as subagents. All inter-agent communication happens via files on disk in the workspace folder.
 
 ## Design Decisions
 
@@ -165,5 +157,5 @@ The `/newsroom` command does minimal setup (creates workspace, captures pitch) t
 | Files on disk for state | Workspace folder | Simple, auditable, versionable. No databases. Enables session resume. |
 | Parallel research | 4 concurrent `Task` calls | Research Lead spawns all researchers simultaneously. ~4x faster than sequential. |
 | 3-round revision cap | Escalate to user after 3 rounds | Prevents infinite loops. User gets current draft + Editor notes to decide. |
-| Structured session log | Markdown with `[GATE]`, `[FEEDBACK]`, `[DECISION]`, `[TRANSITION]` tags | Machine-parseable audit trail. Flexible content within entries. |
-| Graceful degradation | Continue with available data | Empty research results get flagged in `gaps.md`. Tool failures get 2 retries then note-and-continue. |
+| Installable plugin | Code separate from runtime data | Plugin installs once via marketplace. Each working directory is an independent newsroom with its own config. |
+| Lazy initialization | Scaffold on first `/newsroom` run | No setup command needed. Plugin creates the directory structure and copies templates automatically. |

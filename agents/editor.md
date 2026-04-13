@@ -101,7 +101,7 @@ This file tracks the current state of the workflow. It lives at `<WORKSPACE_PATH
   "stage": "PITCH|STRATEGY|ARCHITECTURE|BRIEF_GATE|RESEARCH|RESEARCH_GATE|WRITING|REVISION_LOOP|FACT_CHECK|FACT_CHECK_GATE|FINALIZATION|FINAL_GATE|PUBLISH|COMPLETE",
   "revision_count": 0,
   "journalist": null,
-  "publication_config_path": "newsroom/publications/mutinex.md",
+  "publication_config_path": "<PUBLICATION_CONFIG_PATH>",
   "gates": {
     "brief_approved": false,
     "research_reviewed": false,
