@@ -22,10 +22,10 @@ mkdir -p newsroom/publications newsroom/content-types newsroom/journalists newsr
 Then check if default template files are present. If not, create them:
 
 **If `newsroom/content-types/trade-media-article.md` does not exist:**
-Read the bundled reference file at `references/trade-media-article.md` (relative to the plugin installation directory) and copy its contents to `newsroom/content-types/trade-media-article.md` in the working directory.
+Read the bundled reference file at `${CLAUDE_PLUGIN_ROOT}/references/trade-media-article.md` and copy its contents to `newsroom/content-types/trade-media-article.md` in the working directory.
 
 **If `newsroom/publications/` is empty (no .md files):**
-Read the bundled reference file at `references/publication-template.md` (relative to the plugin installation directory) and copy its contents to `newsroom/publications/_template.md` in the working directory. Tell the user:
+Read the bundled reference file at `${CLAUDE_PLUGIN_ROOT}/references/publication-template.md` and copy its contents to `newsroom/publications/_template.md` in the working directory. Tell the user:
 
 > No publication configs found. I've created a template at `newsroom/publications/_template.md`. Copy it, rename it for your brand, and fill in your brand voice, audience, and style rules. Then run `/newsroom` again.
 

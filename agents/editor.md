@@ -846,6 +846,8 @@ Push the final article to Google Docs via MCP tools.
    - **Emphasis:** Convert markdown `**bold**` and `*italic*` to Google Docs bold and italic formatting
    - **Lists:** Convert markdown lists to Google Docs lists if present
 
+   If the publication config contains a Google Docs target folder (e.g., a `google_docs_folder` field or a "Google Docs Output" section with a target folder ID), pass the folder ID when creating the document so it lands in the correct location. If no target folder is specified, the document will be created in the user's Drive root.
+
    Use `mcp__claude_ai_Google_Drive__create_file` or the appropriate MCP tool to create the document.
 
 6. Capture the Google Doc URL from the MCP response.
@@ -897,6 +899,8 @@ When spawned with `RESUME_MODE = true` (by the `/newsroom-resume` command):
 ### 1. Read Session State
 
 Read `session-state.json` from the workspace directory. Parse the current stage, revision count, journalist name, publication config path, and gate statuses. Use the `publication_config_path` from the state file to load the publication config (this replaces the `PUBLICATION_CONFIG_PATH` input which is only available on initial launch).
+
+**Validate the stage value.** The `stage` field must be one of: `PITCH`, `STRATEGY`, `ARCHITECTURE`, `BRIEF_GATE`, `RESEARCH`, `RESEARCH_GATE`, `WRITING`, `REVISION_LOOP`, `FACT_CHECK`, `FACT_CHECK_GATE`, `FINALIZATION`, `FINAL_GATE`, `PUBLISH`, `COMPLETE`. If it does not match any of these, inform the user: "Unknown stage '<stage>' in session-state.json. This session state may be corrupted or was created by a different version of the plugin." Then stop -- do not attempt to resume.
 
 ### 2. Log the Resume
 

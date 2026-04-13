@@ -83,3 +83,7 @@ Examples:
 - **Article openings:** Lead with the tension or insight, not background. Hook the reader in the first sentence.
 - **Article closings:** End with implication or action, not summary. "So what?" is the test.
 - **Emphasis:** Bold for key terms on introduction. Italics sparingly for nuance. Never ALL CAPS.
+
+## Google Docs Output
+
+- **Target folder:** `<your-google-drive-folder-id>` -- the Google Drive folder ID where published articles will be created. Find this in the folder's URL: `https://drive.google.com/drive/folders/<folder-id>`. If omitted, articles are created in your Drive root.
