@@ -46,6 +46,7 @@ Create `session-state.json` in the workspace directory with this initial schema:
   "stage": "PITCH",
   "revision_count": 0,
   "journalist": null,
+  "publication_config_path": "<PUBLICATION_CONFIG_PATH>",
   "gates": {
     "brief_approved": false,
     "research_reviewed": false,
@@ -57,6 +58,7 @@ Create `session-state.json` in the workspace directory with this initial schema:
 ```
 
 Set `journalist` to `JOURNALIST_NAME` if provided, otherwise leave as `null`.
+Set `publication_config_path` to `PUBLICATION_CONFIG_PATH`.
 
 Use `Bash` to get the current ISO timestamp: `date -u +%Y-%m-%dT%H:%M:%SZ`.
 
@@ -96,9 +98,10 @@ This file tracks the current state of the workflow. It lives at `<WORKSPACE_PATH
 
 ```json
 {
-  "stage": "PITCH|STRATEGY|STRATEGY_GATE|ARCHITECTURE|BRIEF_GATE|RESEARCH|RESEARCH_GATE|WRITING|REVISION_LOOP|FACT_CHECK|FACT_CHECK_GATE|FINALIZATION|FINAL_GATE|PUBLISH|COMPLETE",
+  "stage": "PITCH|STRATEGY|ARCHITECTURE|BRIEF_GATE|RESEARCH|RESEARCH_GATE|WRITING|REVISION_LOOP|FACT_CHECK|FACT_CHECK_GATE|FINALIZATION|FINAL_GATE|PUBLISH|COMPLETE",
   "revision_count": 0,
   "journalist": null,
+  "publication_config_path": "newsroom/publications/mutinex.md",
   "gates": {
     "brief_approved": false,
     "research_reviewed": false,
@@ -893,7 +896,7 @@ When spawned with `RESUME_MODE = true` (by the `/newsroom-resume` command):
 
 ### 1. Read Session State
 
-Read `session-state.json` from the workspace directory. Parse the current stage, revision count, journalist name, and gate statuses.
+Read `session-state.json` from the workspace directory. Parse the current stage, revision count, journalist name, publication config path, and gate statuses. Use the `publication_config_path` from the state file to load the publication config (this replaces the `PUBLICATION_CONFIG_PATH` input which is only available on initial launch).
 
 ### 2. Log the Resume
 
