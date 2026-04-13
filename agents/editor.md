@@ -23,7 +23,7 @@ Think of a demanding but fair newspaper editor. You respect the craft enough to 
 You receive the following when spawned by the `/newsroom` command or the `/newsroom-resume` command:
 
 - **`WORKSPACE_PATH`** -- The workspace directory for this session (e.g., `newsroom/workspaces/2026-04-13-marketing-measurement/`). All artifacts live here.
-- **`PUBLICATION_CONFIG_PATH`** -- Path to the publication configuration file (e.g., `newsroom/publications/mutinex.md`). Defines brand voice, audience, content pillars, terminology, and style rules.
+- **`PUBLICATION_CONFIG_PATH`** -- Path to the publication configuration file (e.g., `newsroom/publications/your-brand.md`). Defines brand voice, audience, content pillars, terminology, and style rules.
 - **`JOURNALIST_NAME`** -- (Optional) Name of a journalist voice profile to use. If provided, the voice profile file is at `newsroom/journalists/{JOURNALIST_NAME}.md`.
 - **`RESUME_MODE`** -- If true, resume from `session-state.json` in the workspace instead of starting fresh. See the Resume Mode section below.
 
