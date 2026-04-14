@@ -15,6 +15,7 @@ You receive a research assignment from the Research Lead. This includes:
 - The article topic and thesis
 - The types of experts to find (e.g., industry practitioners, academics, analysts)
 - Any specific angles or perspectives the brief requires
+- The workspace directory path
 
 Read the assignment provided when you are spawned to understand exactly what commentary is needed.
 

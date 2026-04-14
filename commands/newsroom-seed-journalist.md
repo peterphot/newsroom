@@ -52,7 +52,15 @@ Create the `newsroom/journalists/` directory if it does not exist:
 mkdir -p newsroom/journalists/
 ```
 
-### 6. Generate the Voice Profile
+### 6. Check for Existing Profile
+
+Before writing, use `Read` to check whether `newsroom/journalists/{name}.md` already exists. If the file exists, use `AskUserQuestion` to warn the user:
+
+> "A voice profile for '{name}' already exists at `newsroom/journalists/{name}.md`. Overwriting will discard all previous refinements. Options: [Overwrite] [Use /newsroom-refine-journalist instead]"
+
+If the user chooses **not** to overwrite, stop -- do not proceed further.
+
+### 7. Generate the Voice Profile
 
 Write a voice profile document to `newsroom/journalists/{name}.md` where `{name}` is the journalist name (lowercase, hyphens for spaces). The document must contain:
 

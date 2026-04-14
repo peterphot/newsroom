@@ -345,6 +345,7 @@ Present the brief to the user for approval. This is a mandatory gate -- the user
      - Timestamp: <ISO timestamp>
      - User feedback: <what the user said>
      ```
+   - Update session-state.json: set `stage` to `"ARCHITECTURE"`.
    - Pass the user's feedback to the architect. Re-spawn the architect via `Task` with the original context plus the user's change requests.
    - Return to the ARCHITECTURE stage (re-read, re-evaluate the new brief).
 
@@ -436,14 +437,16 @@ This gate is optional. You, the Editor, decide whether to involve the user based
 
 **If involving the user:**
 
-1. Append to session-log.md:
+1. Update session-state.json: set `stage` to `"RESEARCH_GATE"`.
+
+2. Append to session-log.md:
    ```
    ## [GATE] Research presented to user for review
    - Timestamp: <ISO timestamp>
    - Reason for gate: <why you are involving the user>
    ```
 
-2. Use `AskUserQuestion` to present a summary:
+3. Use `AskUserQuestion` to present a summary:
 
    > Research is complete. Here is a summary of findings:
    >
@@ -459,10 +462,10 @@ This gate is optional. You, the Editor, decide whether to involve the user based
    > - **Adjust the angle** -- tell me how you want to change direction
    > - **Do more research** -- specify what additional research is needed
 
-3. Handle the user's response:
-   - **Proceed:** Log the decision and advance.
-   - **Adjust angle:** Return to ARCHITECTURE with the user's new direction. The architect will update the brief.
-   - **More research:** Re-spawn the research-lead with additional instructions. (This is rare and should be used judiciously.)
+4. Handle the user's response:
+   - **Proceed:** Log the decision. Update session-state.json: set `stage` to `"WRITING"`, set `gates.research_reviewed` to `true`. Advance to WRITING.
+   - **Adjust angle:** Update session-state.json: set `stage` to `"ARCHITECTURE"`. Return to ARCHITECTURE with the user's new direction. The architect will update the brief.
+   - **More research:** Keep `stage` at `"RESEARCH_GATE"` in session-state.json. Re-spawn the research-lead with additional instructions. After the new research completes, re-evaluate and re-present to the user. (This is rare and should be used judiciously.)
 
 **If skipping the gate:**
 
@@ -473,9 +476,7 @@ This gate is optional. You, the Editor, decide whether to involve the user based
    - Rationale: <why user involvement is not needed>
    ```
 
-**In either case:**
-
-- Update session-state.json: set `stage` to `"WRITING"`, set `gates.research_reviewed` to `true`.
+2. Update session-state.json: set `stage` to `"WRITING"`, set `gates.research_reviewed` to `true`.
 
 **Transition:** Proceed to WRITING.
 

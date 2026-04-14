@@ -44,7 +44,7 @@ Use `WebFetch` to read source pages in full context. For each data point you fin
 ### 4. Handle Failures
 
 - **Tool failures:** If a `WebSearch` or `WebFetch` call fails, retry up to 2 times. If it still fails after 2 retries, note the failure in your output (what you were trying to find and that the search/fetch failed) and continue with the data you have.
-- **Empty results:** If a search returns no relevant data for a particular area, document the gap explicitly in your output. Do not silently skip it. State what you searched for and that no relevant data was found.
+- **Empty results:** If a search returns no relevant data for a particular area, document the gap explicitly in your output. Do not silently skip it. State what you searched for and that no relevant data was found. Do not fabricate statistics, estimate figures, or cite studies that you did not actually find and verify.
 
 ### 5. Write the Output
 

@@ -36,7 +36,13 @@ Then stop — do not proceed without a publication config.
 Check for these optional arguments:
 
 - `--journalist <name>` — Journalist voice profile to use. If present, extract the name.
-- `--publication <name>` — Publication config to use (without path or extension). If not provided, auto-detect:
+- `--publication <name>` — Publication config to use (without path or extension). If provided, validate that `newsroom/publications/{name}.md` exists (use `Read` or `Bash`). If the file does not exist, tell the user:
+
+  > Publication config not found: `newsroom/publications/{name}.md`. Available publications:
+
+  Then list the `.md` files in `newsroom/publications/` (excluding `_template.md`). Stop — do not proceed.
+
+  If not provided, auto-detect:
   - List `.md` files in `newsroom/publications/` (excluding `_template.md`)
   - If exactly one exists, use it
   - If multiple exist, use `AskUserQuestion` to ask the user which publication to use
