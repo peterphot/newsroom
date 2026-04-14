@@ -5,7 +5,5 @@
   "author": {
     "name": "peterphot"
   },
-  "license": "MIT",
-  "repository": "https://github.com/peterphot/newsroom",
-  "keywords": ["newsroom", "writing", "agents", "journalism", "content"]
+  "repository": "https://github.com/peterphot/newsroom"
 }
