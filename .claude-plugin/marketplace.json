@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "newsroom",
-      "source": ".",
+      "source": "plugins/newsroom",
       "description": "An agentic newsroom that turns a pitch into a polished trade media article. Specialist agents — orchestrated by an Editor — research, write, fact-check, and deliver to Google Docs."
     }
   ]
