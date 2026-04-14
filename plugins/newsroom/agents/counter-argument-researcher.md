@@ -54,7 +54,7 @@ Use `WebFetch` to read source pages for full context. For each piece of counter-
 
 ### 6. Write the Output
 
-Write `03-research/counter-arguments.md` in the workspace directory. Structure it as follows:
+Write your output to the **absolute path** provided in your assignment (e.g. `<WORKSPACE_PATH>/03-research/counter-arguments.md`). Do NOT use a relative path -- use the full absolute path exactly as given to you by the Research Lead. Structure it as follows:
 
 - **Summary:** A brief overview of the strongest case against the thesis.
 - **Published Criticism:** Specific critiques, skeptical takes, and opposing arguments from credible sources, with attribution and URLs.

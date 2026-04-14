@@ -376,34 +376,38 @@ Spawn the Research Lead to coordinate specialist researchers and produce a unifi
 
 2. Update session-state.json: set `stage` to `"RESEARCH"`.
 
-3. Spawn the `research-lead` agent via `Task`. Pass the following context:
-   - The workspace path (`WORKSPACE_PATH`)
-   - Instruct the research-lead to read `02-brief.md` for research requirements
-   - Instruct the research-lead to spawn all four specialist researchers as parallel subagents:
-     - `data-researcher` (outputs `03-research/data-research.md`)
-     - `industry-researcher` (outputs `03-research/industry-research.md`)
-     - `counter-argument-researcher` (outputs `03-research/counter-arguments.md`)
-     - `commentary-researcher` (outputs `03-research/commentary-research.md`)
+3. Create the research directory: use `Bash` to run `mkdir -p <WORKSPACE_PATH>/03-research`.
+
+4. Spawn the `research-lead` agent via `Task`. In the Task prompt, include ALL of the following **literally** (do not paraphrase or abbreviate -- the research-lead needs every detail because it cannot see this file):
+   - The **absolute workspace path**: `<WORKSPACE_PATH>` (the full path, e.g. `/Users/.../newsroom/workspaces/2026-04-14-topic-slug`)
+   - Instruct: "Read `<WORKSPACE_PATH>/02-brief.md` for research requirements."
+   - Instruct: "All output files MUST use absolute paths under `<WORKSPACE_PATH>/03-research/`. The directory already exists."
+   - Instruct: "When you spawn each researcher via Task, you MUST include the absolute workspace path in each Task prompt and tell each researcher to write their output to the absolute path. Researchers cannot see your instructions -- you must repeat the paths in full."
+   - List the expected outputs with absolute paths:
+     - `data-researcher` writes `<WORKSPACE_PATH>/03-research/data-research.md`
+     - `industry-researcher` writes `<WORKSPACE_PATH>/03-research/industry-research.md`
+     - `counter-argument-researcher` writes `<WORKSPACE_PATH>/03-research/counter-arguments.md`
+     - `commentary-researcher` writes `<WORKSPACE_PATH>/03-research/commentary-research.md`
    - Instruct the research-lead to synthesize findings into:
-     - `03-research/research-package.md`
-     - `03-research/sources.md`
-     - `03-research/gaps.md`
+     - `<WORKSPACE_PATH>/03-research/research-package.md`
+     - `<WORKSPACE_PATH>/03-research/sources.md`
+     - `<WORKSPACE_PATH>/03-research/gaps.md`
 
-4. Wait for the Research Lead to complete. This may take some time as it spawns and waits for four subagents.
+5. Wait for the Research Lead to complete. This may take some time as it spawns and waits for four subagents.
 
-5. Read the research outputs:
-   - `03-research/research-package.md` -- the synthesized findings
-   - `03-research/gaps.md` -- areas where research was inconclusive
-   - Optionally read `03-research/sources.md` for source quality assessment
+6. Read the research outputs (using absolute paths):
+   - `<WORKSPACE_PATH>/03-research/research-package.md` -- the synthesized findings
+   - `<WORKSPACE_PATH>/03-research/gaps.md` -- areas where research was inconclusive
+   - Optionally read `<WORKSPACE_PATH>/03-research/sources.md` for source quality assessment
 
-6. **Review the research.** Evaluate:
+7. **Review the research.** Evaluate:
    - Is the research substantial? Does it provide enough material for a strong article?
    - Are there critical gaps that would undermine the article's thesis?
    - Are there conflicts flagged between researchers? If so, are they significant?
    - Is the evidence base strong, mixed, or weak?
    - Does the research support, challenge, or complicate the brief's thesis?
 
-7. Append to session-log.md:
+8. Append to session-log.md:
    ```
    ## [DECISION] Research assessment
    - Timestamp: <ISO timestamp>
@@ -413,7 +417,7 @@ Spawn the Research Lead to coordinate specialist researchers and produce a unifi
    - Assessment: <overall evaluation>
    ```
 
-8. Decide whether to involve the user (RESEARCH_GATE) or proceed directly to WRITING.
+9. Decide whether to involve the user (RESEARCH_GATE) or proceed directly to WRITING.
 
 **Transition:** Proceed to RESEARCH_GATE or skip to WRITING (see next stage).
 

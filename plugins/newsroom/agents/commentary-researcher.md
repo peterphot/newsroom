@@ -78,7 +78,7 @@ If you find no relevant commentary on the topic, document the gap explicitly in 
 
 ## Output
 
-Write `03-research/commentary-research.md` in the workspace directory. Structure the file as follows:
+Write your output to the **absolute path** provided in your assignment (e.g. `<WORKSPACE_PATH>/03-research/commentary-research.md`). Do NOT use a relative path -- use the full absolute path exactly as given to you by the Research Lead. Structure the file as follows:
 
 ### Output Format
 

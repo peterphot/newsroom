@@ -48,7 +48,7 @@ Use `WebFetch` to read source pages in full context. For each data point you fin
 
 ### 5. Write the Output
 
-Write `03-research/data-research.md` in the workspace directory. Structure it as follows:
+Write your output to the **absolute path** provided in your assignment (e.g. `<WORKSPACE_PATH>/03-research/data-research.md`). Do NOT use a relative path -- use the full absolute path exactly as given to you by the Research Lead. Structure it as follows:
 
 - **Summary:** A brief overview of the data landscape -- what was found, what was not.
 - **Key Data Points:** Each data point presented with:

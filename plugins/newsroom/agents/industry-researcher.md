@@ -54,7 +54,7 @@ Synthesize your findings into a clear picture:
 
 ### 6. Write the Output
 
-Write `03-research/industry-research.md` in the workspace directory. Structure it as follows:
+Write your output to the **absolute path** provided in your assignment (e.g. `<WORKSPACE_PATH>/03-research/industry-research.md`). Do NOT use a relative path -- use the full absolute path exactly as given to you by the Research Lead. Structure it as follows:
 
 - **Summary:** A brief overview of the industry landscape as it relates to the article topic.
 - **Key Players:** Who they are, what they are doing, their relevance to the topic.
