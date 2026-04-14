@@ -100,6 +100,7 @@ This file tracks the current state of the workflow. It lives at `<WORKSPACE_PATH
 {
   "stage": "PITCH|STRATEGY|ARCHITECTURE|BRIEF_GATE|RESEARCH|RESEARCH_GATE|WRITING|REVISION_LOOP|FACT_CHECK|FACT_CHECK_GATE|FINALIZATION|FINAL_GATE|PUBLISH|COMPLETE",
   "revision_count": 0,
+  "fact_check_pass": 0,
   "journalist": null,
   "publication_config_path": "<PUBLICATION_CONFIG_PATH>",
   "gates": {
@@ -678,15 +679,20 @@ Handle fact-check results. If there are failures, send the draft back to the Jou
 
 **If fact-check has any `[FAIL]` items:**
 
-1. Append to session-log.md:
+1. Read `fact_check_pass` from session-state.json. If `fact_check_pass >= 2`, log a warning and proceed to FINALIZATION (do not loop indefinitely). Escalate remaining issues to the user at the FINAL_GATE.
+
+2. Append to session-log.md:
    ```
    ## [DECISION] Fact-check failures found -- sending back to journalist
    - Timestamp: <ISO timestamp>
+   - Fact-check pass: <fact_check_pass + 1>
    - Failed claims: <list of failed claims>
    - Action: Journalist must fix all [FAIL] items
    ```
 
-2. Spawn the `journalist` agent via `Task` with:
+3. Increment `fact_check_pass` in session-state.json and write to disk.
+
+4. Spawn the `journalist` agent via `Task` with:
    - The workspace path
    - The brief and research package paths
    - The fact-check report (`05-fact-check.md`) as feedback
@@ -694,14 +700,14 @@ Handle fact-check results. If there are failures, send the draft back to the Jou
    - The voice profile path if applicable
    - Specific instruction: "Fix all [FAIL] items from the fact-check report. Remove or correct unsupported claims. Do not introduce new unsupported claims."
 
-3. Wait for the Journalist to complete. Read the new draft.
+5. Wait for the Journalist to complete. Read the new draft.
 
-4. Re-run the fact-checker on the revised draft:
+6. Re-run the fact-checker on the revised draft:
    - Spawn the `fact-checker` agent again via `Task` with the new draft version.
    - Read the new `05-fact-check.md`.
-   - If `[FAIL]` items remain after this second pass, log a warning and proceed. Do not loop indefinitely on fact-check. Escalate remaining issues to the user at the FINAL_GATE if needed.
+   - If `[FAIL]` items remain, return to step 1 of this section (the `fact_check_pass` counter prevents infinite loops).
 
-5. Update session-state.json: set `stage` to `"FINALIZATION"`.
+7. Update session-state.json: set `stage` to `"FINALIZATION"`.
 
 **If fact-check has only `[PASS]` and `[FLAG]` items (no failures):**
 
@@ -862,6 +868,26 @@ Push the final article to Google Docs via MCP tools.
 
 8. Update session-state.json: set `stage` to `"COMPLETE"`.
 
+**Error handling:** If any MCP tool call fails (authentication rejected, tool unavailable, network error, or any other failure):
+
+1. Append to session-log.md:
+   ```
+   ## [DECISION] Google Docs publish failed
+   - Timestamp: <ISO timestamp>
+   - Error: <error message or description of failure>
+   - Action: Skipping publish, article is saved locally at 06-final.md
+   ```
+
+2. Inform the user via `AskUserQuestion`:
+   > Google Docs publish failed: [brief error description].
+   >
+   > Your article is safely saved at `<WORKSPACE_PATH>/06-final.md`. You can:
+   > - **Retry** -- attempt to publish again
+   > - **Skip** -- finish the session without publishing (article remains at `06-final.md`)
+
+3. If user retries: re-attempt steps 4-6 above. If it fails again, skip to COMPLETE.
+4. If user skips: update session-state.json to `"COMPLETE"` and proceed.
+
 **Transition:** Proceed to COMPLETE.
 
 ---
@@ -950,6 +976,7 @@ Execute the stage indicated by `session-state.json`. Follow the normal stage ins
 - **WRITING:** Check if a draft already exists. If so, read it and proceed to REVISION_LOOP instead of re-spawning the Journalist from scratch.
 - **REVISION_LOOP:** Read the latest draft and the session-log for previous feedback. Continue the revision loop from where it left off, respecting the revision_count.
 - **FACT_CHECK:** Check if `05-fact-check.md` already exists. If so, read it and proceed to FACT_CHECK_GATE. If not, re-run the fact-checker.
+- **FACT_CHECK_GATE:** Read `fact_check_pass` from session-state.json. If `fact_check_pass > 0`, a journalist fix was already dispatched in a previous pass. Check if a newer draft exists (version higher than what the fact-check was run against). If so, re-run the fact-checker on the newer draft. If not, re-execute FACT_CHECK_GATE from the top with the current `05-fact-check.md`.
 
 ---
 

@@ -44,15 +44,7 @@ Read the fetched reference content and any provided excerpts. Extract the follow
 - **How they open pieces** -- Hooks, cold opens, provocative statements, anecdotes, data points, questions?
 - **How they close pieces** -- Calls to action, synthesis, open questions, callbacks to the opening, forward-looking statements?
 
-### 5. Create the Journalists Directory
-
-Create the `newsroom/journalists/` directory if it does not exist:
-
-```bash
-mkdir -p newsroom/journalists/
-```
-
-### 6. Check for Existing Profile
+### 5. Check for Existing Profile
 
 Before writing, use `Read` to check whether `newsroom/journalists/{name}.md` already exists. If the file exists, use `AskUserQuestion` to warn the user:
 

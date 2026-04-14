@@ -84,7 +84,7 @@ Write the user's raw pitch text to `00-pitch.md` in the workspace directory. The
 
 ### 8. Spawn the Editor
 
-Use the `Task` tool to spawn the Editor agent (`agents/editor.md`). Pass the following context:
+Use the `Task` tool to spawn the Editor agent (`${CLAUDE_PLUGIN_ROOT}/agents/editor.md`). Pass the following context:
 
 - **Workspace path:** The full path to the workspace directory you just created
 - **Publication config path:** `newsroom/publications/{publication-name}.md`
