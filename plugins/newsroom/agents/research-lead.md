@@ -43,10 +43,12 @@ Each assignment must include:
 
 This step is critical for performance. You MUST spawn all four researchers as parallel Task calls in a SINGLE assistant message. Do not spawn them sequentially. Issue all four Task calls in the same message:
 
-- Spawn `data-researcher` via Task with its assignment
-- Spawn `industry-researcher` via Task with its assignment
-- Spawn `counter-argument-researcher` via Task with its assignment
-- Spawn `commentary-researcher` via Task with its assignment
+- Spawn `newsroom:data-researcher` via Task (subagent_type) with its assignment
+- Spawn `newsroom:industry-researcher` via Task (subagent_type) with its assignment
+- Spawn `newsroom:counter-argument-researcher` via Task (subagent_type) with its assignment
+- Spawn `newsroom:commentary-researcher` via Task (subagent_type) with its assignment
+
+> **Do NOT read agent definition files.** The Task tool loads them automatically via subagent_type. Just spawn the agent.
 
 All four Task calls must appear in the SAME message so they execute in parallel.
 
