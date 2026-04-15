@@ -1059,14 +1059,16 @@ All files live in the workspace directory (`WORKSPACE_PATH`):
 
 ### Agent Reference
 
-| Agent | Prompt file | Spawned via | Purpose |
-|-------|-------------|-------------|---------|
-| strategist | `agents/strategist.md` | Task | Socratic interrogation of the pitch |
-| architect | `agents/architect.md` | Task | Structured brief creation |
-| research-lead | `agents/research-lead.md` | Task | Coordinates 4 researchers, synthesizes |
-| data-researcher | `agents/data-researcher.md` | Task (by research-lead) | Statistics, data points |
-| industry-researcher | `agents/industry-researcher.md` | Task (by research-lead) | Industry landscape, trends |
-| counter-argument-researcher | `agents/counter-argument-researcher.md` | Task (by research-lead) | Opposing viewpoints |
-| commentary-researcher | `agents/commentary-researcher.md` | Task (by research-lead) | Expert quotes |
-| journalist | `agents/journalist.md` | Task | Writes and revises drafts |
-| fact-checker | `agents/fact-checker.md` | Task | Line-by-line verification |
+> **IMPORTANT:** Do NOT read the agent prompt files. You do not need to read them. The Task tool loads agent definitions automatically when you specify `subagent_type`. Just spawn the agent — do not pre-read its definition.
+
+| Agent | subagent_type | Spawned via | Purpose |
+|-------|---------------|-------------|---------|
+| strategist | `newsroom:strategist` | Task | Socratic interrogation of the pitch |
+| architect | `newsroom:architect` | Task | Structured brief creation |
+| research-lead | `newsroom:research-lead` | Task | Coordinates 4 researchers, synthesizes |
+| data-researcher | `newsroom:data-researcher` | Task (by research-lead) | Statistics, data points |
+| industry-researcher | `newsroom:industry-researcher` | Task (by research-lead) | Industry landscape, trends |
+| counter-argument-researcher | `newsroom:counter-argument-researcher` | Task (by research-lead) | Opposing viewpoints |
+| commentary-researcher | `newsroom:commentary-researcher` | Task (by research-lead) | Expert quotes |
+| journalist | `newsroom:journalist` | Task | Writes and revises drafts |
+| fact-checker | `newsroom:fact-checker` | Task | Line-by-line verification |

@@ -46,7 +46,7 @@ Tell the user which workspace is being resumed and from which stage. For example
 
 Use the `Task` tool to spawn the Editor agent in RESUME mode:
 
-- **Prompt file:** `${CLAUDE_PLUGIN_ROOT}/agents/editor.md`
+- **subagent_type:** `newsroom:editor`
 - **Instructions:** Pass the following context to the Editor:
   - The workspace path
   - The current stage from session-state.json
