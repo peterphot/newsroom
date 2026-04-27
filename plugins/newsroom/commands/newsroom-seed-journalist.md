@@ -56,21 +56,24 @@ If the user chooses **not** to overwrite, stop -- do not proceed further.
 
 Write a voice profile document to `newsroom/journalists/{name}.md` where `{name}` is the journalist name (lowercase, hyphens for spaces). The document must contain:
 
-#### Voice Summary
+## Voice Summary
 2-3 sentences capturing the essence of this voice. What makes it distinctive? What would someone immediately notice?
 
-#### Detailed Style Notes
+## Detailed Style Notes
 The extracted characteristics from Step 4, organized as structured notes a writer can reference while drafting.
 
-#### Do's and Don'ts
-Specific, actionable guidance for emulating this voice:
-- **Do:** concrete instructions (e.g., "Open with a bold claim, not a scene-setter")
-- **Don't:** specific anti-patterns (e.g., "Don't use passive voice for attribution")
+## Do's and Don'ts
 
-#### Example Phrases and Patterns
+### Do
+- concrete instructions (e.g., "Open with a bold claim, not a scene-setter")
+
+### Don't
+- specific anti-patterns (e.g., "Don't use passive voice for attribution")
+
+## Example Phrases and Patterns
 Characteristic expressions, sentence constructions, or turns of phrase drawn from the reference material. These are templates a writer can pattern-match against.
 
-#### Reference Material Links
+## Reference Material Links
 The source URLs used to create this profile, so the profile can be traced back to its origins and updated later.
 
 ## Output
