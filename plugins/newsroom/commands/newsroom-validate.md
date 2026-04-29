@@ -22,7 +22,7 @@ Statically check that every agent's declared inputs exist in the bundled templat
 - All three child tags are required (use empty content if the agent consumes nothing from that namespace).
 - A `##`-level declaration transitively covers all `###` children of that section.
 - A heading is **advisory** if the very next line (no skipping blanks) is exactly the literal string `<!-- advisory-only -->`. A blank line between heading and marker means the heading is NOT advisory. Advisory headings are exempt from orphan checking.
-- HTML comments other than the exact string `<!-- advisory-only -->` (e.g., `<!-- TODO -->`) are ignored for marker detection: they neither mark the heading advisory nor cause a parse error. They are skipped when determining the next non-blank content line.
+- HTML comments other than the exact string `<!-- advisory-only -->` (e.g., `<!-- TODO -->`) are NOT advisory markers. If such a comment sits on the line directly after a heading, the heading is **not advisory** (because the strict "very next line, no skipping" rule applies — the comment is not the marker, so the marker is not present). Do NOT skip past non-advisory comments looking for a later marker; that would re-introduce the rule contradiction.
 - Slugs are **namespaced by parent tag**. `publication.mission` and `content_type.mission` are distinct and do not collide. Cross-namespace lookups never happen.
 
 ## Slug Derivation

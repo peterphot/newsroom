@@ -510,19 +510,20 @@ Spawn the Journalist to produce a first draft from the brief and research packag
 
 3. Determine the journalist voice profile path:
    - `JOURNALIST_NAME` is required (set from inputs or session-state.json). The voice profile is at `newsroom/journalists/{JOURNALIST_NAME}.md`.
-   - If `JOURNALIST_NAME` is missing OR the profile file does not exist: **halt the workflow and escalate to the user**. Do NOT proceed with a fallback voice -- generic voice produces silent failures. Log the halt and tell the user to run `/newsroom-seed-journalist <name>` (or fix `--journalist`) and resume.
+   - If `JOURNALIST_NAME` is missing OR the profile file does not exist: **halt the workflow and escalate to the user**. Do NOT proceed with a fallback voice -- generic voice produces silent failures. Log the halt:
      ```
      ## [HALT] Journalist voice profile missing
      - Timestamp: <ISO timestamp>
      - Expected: JOURNALIST_NAME set, file at newsroom/journalists/{JOURNALIST_NAME}.md
      - Action: Workflow halted. User must select or seed a journalist before resuming.
      ```
+     **Then STOP — do NOT proceed to step 4.** Tell the user to run `/newsroom-seed-journalist <name>` (or fix `--journalist`) and then `/newsroom-resume <workspace-path>`. Use `AskUserQuestion` to confirm the user has seen the halt before any further action. Do not spawn the journalist or any subsequent agent until the journalist input is fixed.
 
 4. Spawn the `journalist` agent via `Task`. Pass the following context:
    - The workspace path (`WORKSPACE_PATH`)
    - Instruct the journalist to read `02-brief.md` (the brief) and `03-research/research-package.md` (the research package) and `03-research/sources.md` (the sources)
    - The draft version number: `v1`
-   - The voice profile path if applicable (e.g., `newsroom/journalists/{JOURNALIST_NAME}.md`)
+   - The voice profile path: `newsroom/journalists/{JOURNALIST_NAME}.md`
    - Instruct the journalist to output `04-draft-v1.md` to the workspace
 
 5. Wait for the Journalist to complete.
@@ -582,7 +583,7 @@ The Editor-Journalist revision loop. You review the current draft, provide feedb
         - The workspace path
         - The brief and research package paths (same as before)
         - The new draft version number: `v<revision_count + 1>`
-        - The voice profile path if applicable
+        - The voice profile path: `newsroom/journalists/{JOURNALIST_NAME}.md`
         - Your specific feedback notes
         - Instruct the journalist to read the previous draft and your feedback, then produce the next version
       - Wait for the Journalist to complete.
@@ -653,7 +654,7 @@ Spawn the Fact Checker to verify the draft's claims against the research.
 4. Spawn the `fact-checker` agent via `Task`. Pass the following context:
    - The workspace path (`WORKSPACE_PATH`)
    - The draft version to check (the latest `04-draft-v<N>.md`)
-   - Instruct the fact-checker to read the draft and all files in `03-research/`
+   - Instruct the fact-checker to read **`02-brief.md` first** (to discover the publication config path from the brief's `Publication config path:` field), then the publication config (for the disclosure rules), then the draft, then all files in `03-research/`
    - Instruct the fact-checker to output `05-fact-check.md` to the workspace
 
 5. Wait for the Fact Checker to complete.
@@ -705,7 +706,7 @@ Handle fact-check results. If there are failures, send the draft back to the Jou
    - The brief and research package paths
    - The fact-check report (`05-fact-check.md`) as feedback
    - The new draft version number (increment from latest)
-   - The voice profile path if applicable
+   - The voice profile path: `newsroom/journalists/{JOURNALIST_NAME}.md`
    - Specific instruction: "Fix all [FAIL] items from the fact-check report. Remove or correct unsupported claims. Do not introduce new unsupported claims."
 
 5. Wait for the Journalist to complete. Read the new draft.

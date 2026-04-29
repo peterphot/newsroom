@@ -167,7 +167,16 @@ The `/newsroom-validate` command parses the bundled templates in `references/` a
 - Every declared field exists in the relevant template (errors on broken contracts)
 - Every template field is consumed by at least one agent, or marked `<!-- advisory-only -->` (warns on orphans)
 
-When you add a field to a bundled template, update the `<inputs>` declaration of the consuming agent in the same change, then run `/newsroom-validate`. Field slugs are derived from `##` and `###` headings via lowercase + non-alphanumeric-to-underscore.
+When you add a field to a bundled template, update the `<inputs>` declaration of the consuming agent in the same change, then run `/newsroom-validate`.
+
+Field slugs are derived from `##` and `###` headings: strip the leading `#`s, strip any leading numeric prefix like `1. ` (digits + dot + required whitespace), lowercase, drop apostrophes and quotes (`'`, `"`, smart quotes, backticks), replace runs of non-alphanumeric characters with a single underscore, trim leading/trailing underscores. Headings must be plain text (no Markdown links or code spans). Slugs are namespaced by parent tag — `publication.mission` and `content_type.mission` are distinct. A `##` declaration transitively covers all `###` children. Worked example: `## Do's and Don'ts` → `dos_and_donts`. See `/newsroom-validate`'s **Slug Derivation** section for the full algorithm.
+
+### Upgrading from 1.2.x
+
+Journalist profiles seeded by 1.2.x used `####` headings. 1.3.0's validator parses `##`/`###` only — pre-1.3.0 profiles will register zero fields and the journalist agent will not find the structure it expects. To migrate, either:
+
+- Re-run `/newsroom-seed-journalist <name>` to regenerate the profile, or
+- Promote each `#### ` heading in `newsroom/journalists/*.md`: top-level sections (Voice Summary, Detailed Style Notes, Do's and Don'ts, Example Phrases and Patterns, Reference Material Links) become `## `, and the Do/Don't sub-sections under "Do's and Don'ts" become `### `.
 
 ## Architecture
 

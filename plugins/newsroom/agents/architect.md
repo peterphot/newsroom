@@ -42,9 +42,9 @@ Write `02-brief.md` to the workspace directory. It must contain all of the follo
 
 #### Required Fields
 
-0. **Source paths** -- Record the absolute paths of the publication config and content type definition files used to produce this brief. Downstream agents (Journalist, Fact Checker) read these paths from the brief. Use the literal field names below so the parsers in those agents can locate them:
-   - `Publication config path:` followed by the `PUBLICATION_CONFIG_PATH` you received as input
-   - `Content type definition path:` followed by the path of the content type definition you read
+0. **Source paths** -- Record the paths of the publication config and content type definition files used to produce this brief, exactly as you received them in your inputs. Downstream agents (Journalist, Fact Checker) read these paths from the brief. Use the literal field names below — match the format exactly so the parsers in those agents can locate them:
+   - `Publication config path:` followed by the path you received as `PUBLICATION_CONFIG_PATH`
+   - `Content type definition path:` followed by the path of the content type definition you were given when spawned
 
 1. **Headline direction** -- A working title for the piece. This is not the final headline but a clear signal of the angle and tone. Informed by the validated topic statement and the publication's voice.
 

@@ -68,9 +68,9 @@ Capture:
 
 10. **Resolution style** -- How the piece resolves at the very end. Offer the user the standard options (CTA, takeaway, open question) and ask which apply -- and crucially, whether the type permits **mixed** resolutions or enforces a single one. The Architect records the chosen resolution in the brief and the Journalist commits to it; if the type permits mixing, say so explicitly so the Architect knows it can declare an ordered mix (e.g., "takeaway, then CTA").
 
-#### Optional but useful
+11. **Tone guidance** -- General tone characteristics for the type (formal/informal, technical depth, voice register). Both the Architect and the Journalist consume this directly, so it is required — push for specificity rather than accepting "professional but accessible".
 
-11. **Tone guidance** -- General tone characteristics for the type (formal/informal, technical depth, voice register).
+#### Optional but useful
 
 12. **What distinguishes this type from adjacent types** -- E.g., "Trade media article vs general business journalism: assumes domain expertise, prioritises practical implication over narrative." This helps the Architect and Editor avoid mode-confusion. (Advisory-only — agents do not consume this directly.)
 
