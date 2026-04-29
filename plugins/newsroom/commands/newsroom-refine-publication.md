@@ -29,19 +29,24 @@ Then **stop**.
 
 Produce a concise summary of what the current config captures, section by section. For each section, show one line: either the first line of content, or `(empty / not specified)` if the section is a placeholder. The user needs to know what is already there before deciding what to change.
 
-Example:
+Walk every section in canonical order (matching the bundled template). Do not abbreviate the summary — the user must see every section so they know what is refinable.
 
-> Current config for `acme-analytics`:
+Example (for `acme-analytics`):
+
 > - **Mission:** Acme exists to give marketing leaders evidence-based perspective...
+> - **Brand Voice:** Confident and clear, like a sharp colleague...
+> - **Audience:** CMOs, VPs Marketing, Heads of Performance...
 > - **Tone Rules:** 3 always, 3 never (with examples)
 > - **Topical Scope:** In: 4 items / Out: 4 items
 > - **Voice Examples:** 2 sentences
-> - **Audience:** CMOs, VPs Marketing, Heads of Performance...
-> - **Byline / Sign-off / CTA:** Configured (see file)
-> - **Distribution Context:** 70% own / 25% trade / 5% syndication
-> - **Disclosures:** Configured
+> - **Content Pillars:** _Not specified_
+> - **Terminology:** Preferred / Avoid / Jargon Policy all configured
+> - **Past Content References:** 4 example URLs (advisory-only)
 > - **Style Rules:** Configured
-> - **Google Docs target folder:** Not specified
+> - **Byline / Sign-off / CTA:** Configured
+> - **Distribution Context:** 70% own / 25% trade / 5% syndication
+> - **Required Disclosures:** Configured
+> - **Google Docs Output:** Not specified
 
 ### 4. Ask What to Refine
 
@@ -82,9 +87,11 @@ Use `AskUserQuestion`:
 
 If the user picks **Revise**, loop back to step 6. If **Cancel**, stop without writing. If **Apply**, continue.
 
-### 8. Write Atomically
+### 8. Write in One Pass
 
-Use `Write` to replace `newsroom/publications/{name}.md` in a single operation with the full updated file content. Do not use multiple `Edit` calls -- one atomic write so the file is never half-updated. Preserve the section order from the seeder template; do not rearrange.
+Use a single `Write` call (not multiple `Edit` calls) to replace `newsroom/publications/{name}.md` with the full updated file content. One pass instead of section-by-section mutation.
+
+**Section order:** if the existing file's section order already matches the canonical bundled-template order, preserve it. If the existing file is in a different order (e.g., hand-edited or written by an older seeder), the diff in step 7 must explicitly include the reorder so the user sees and consents to it — do not silently rearrange a user file.
 
 ### 9. Confirm
 

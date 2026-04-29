@@ -22,17 +22,25 @@ Then **stop**.
 
 For each of the three category directories below, use `Glob` to find `.md` files. **Skip any file whose name starts with `_`** (these are templates, e.g., `_template.md`).
 
-For each file found, use `Read` to load it and extract a one-line descriptor:
+For each file found, use `Read` to load it and extract a one-line descriptor.
 
-- **`newsroom/publications/*.md`** -- descriptor is the **Mission** section's first non-empty line. If no Mission section exists, fall back to the first non-empty line of the **Brand Voice** section. If neither exists, use `(no descriptor)`.
-- **`newsroom/journalists/*.md`** -- descriptor is the first non-empty line under the **Voice Summary** section. If absent, use `(no descriptor)`.
-- **`newsroom/content-types/*.md`** -- descriptor is the first sentence of the **Overview** section. If absent, use the file's `# heading` line, otherwise `(no descriptor)`.
+**Descriptor extraction rule (applies to every category):** the descriptor is the first line under the named section that is not blank, not a heading (does not start with `#`), not an HTML comment (starts with `<!--`), and not a blockquote (starts with `>`).
+
+- **`newsroom/publications/*.md`** -- look in the **Mission** section first. If it has no qualifying line (or no Mission section exists), fall back to the **Brand Voice** section. If neither yields a line, use `(no descriptor)`.
+- **`newsroom/journalists/*.md`** -- look in the **Voice Summary** section. If absent, use `(no descriptor)`.
+- **`newsroom/content-types/*.md`** -- look in the **Overview** section, take the first line per the rule above, then take only the text up to the first `.`, `!`, or `?` followed by whitespace or end-of-line. If no terminator is found, use the first 120 characters. If the Overview section is absent, fall back to the file's `# heading` line, otherwise `(no descriptor)`.
 
 Truncate any descriptor to ~120 characters.
 
 ### 3. Render the Output
 
-Print three sections, in this order. Use the file's basename (without `.md`) as the name. If a category directory is missing or empty (after skipping `_*` files), say so.
+Print three sections, in this order. Use the file's basename (without `.md`) as the name.
+
+If a category directory is missing or contains only `_*` files, render the section header followed by the literal line:
+
+> `_No entries. Use /newsroom-seed-<category> to create one._`
+
+where `<category>` is `publication`, `journalist`, or `content-type`.
 
 Format:
 
@@ -49,10 +57,7 @@ Format:
 
 ## Content Types (newsroom/content-types/)
 
-- **trade-media-article** — A long-form opinion or analysis piece written for an industry-specific audience.
-- **customer-case-study** — A structured case study built around a customer outcome and the methodology that produced it.
-
-(empty categories show as: "_No entries. Use /newsroom-seed-{category} to create one._")
+_No entries. Use /newsroom-seed-content-type to create one._
 ```
 
 ### 4. End

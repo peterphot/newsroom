@@ -42,6 +42,10 @@ Write `02-brief.md` to the workspace directory. It must contain all of the follo
 
 #### Required Fields
 
+0. **Source paths** -- Record the absolute paths of the publication config and content type definition files used to produce this brief. Downstream agents (Journalist, Fact Checker) read these paths from the brief. Use the literal field names below so the parsers in those agents can locate them:
+   - `Publication config path:` followed by the `PUBLICATION_CONFIG_PATH` you received as input
+   - `Content type definition path:` followed by the path of the content type definition you read
+
 1. **Headline direction** -- A working title for the piece. This is not the final headline but a clear signal of the angle and tone. Informed by the validated topic statement and the publication's voice.
 
 2. **Audience** -- Who this piece is for. Derived from the publication config's audience profile, sharpened by the specific topic from the strategy. Be specific: not "marketers" but "performance marketing leaders at mid-to-large brands evaluating MMM solutions."
@@ -58,7 +62,7 @@ Write `02-brief.md` to the workspace directory. It must contain all of the follo
 
 8. **Structure template** -- Section-by-section breakdown of the piece. Derived from the content type definition's structural template. For each section, include: the section name, its purpose, and approximate proportion of total word count.
 
-9. **Resolution direction** -- The chosen ending style for the piece, drawn from the content type's Resolution Style options (CTA, takeaway, or open question). Pick one. The Journalist commits to it; do not list multiple options.
+9. **Resolution direction** -- The chosen ending style, drawn from the content type's Resolution Style. If the content type permits a single style, pick one (CTA, takeaway, or open question). If the content type explicitly permits mixed resolutions, declare the specific mix and order (e.g., "takeaway, then CTA") so the Journalist commits to a definite plan rather than improvising. Either way, do not leave the choice open.
 
 10. **Research requirements** -- What the Research Lead needs to find. Be specific. This section should list:
    - Specific data points or statistics needed

@@ -199,11 +199,13 @@ A trade media article is a long-form opinion or analysis piece written for an in
 
 ### Lede Style
 
-Distinct from the generic "Hook/Lede" section above, this captures the *patterns* this content type favours:
+This content type favours one of three lede patterns:
 
-- **Preferred patterns:** data-led, event-led, or provocation-led (see Section 1)
-- **Avoid:** scene-setting ledes, dictionary-definition ledes, throat-clearing ("In recent years...")
-- The lede must commit to a specific argument inside two sentences. If it could open any article on the topic, it is too generic.
+- **Data-led:** Open with a concrete, surprising statistic. ("Last quarter, X fell by 30% — and most of the industry hasn't noticed yet.")
+- **Event-led:** Anchor to a recent industry move. ("When [Company] announced [move] last week, the reaction was [X]. But the real story is [Y].")
+- **Provocation-led:** Open with a falsifiable claim that some readers will disagree with. ("The conventional wisdom about [topic] is wrong, and the data proves it.")
+
+Avoid scene-setting ledes, dictionary-definition ledes, and throat-clearing ("In recent years..."). The lede must commit to a specific argument inside two sentences. If it could open any article on the topic, it is too generic.
 
 ### Visual Callouts
 

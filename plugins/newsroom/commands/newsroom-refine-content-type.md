@@ -34,11 +34,14 @@ Example:
 > Current definition for `trade-media-article`:
 > - **Word count:** 800-1500
 > - **Structural template:** 1. Hook/Lede (10%) → 2. Context (10-15%) → 3. Argument (5-10%) → 4. Evidence (30-35%) → 5. Counterpoint (10-15%) → 6. Commentary (10-15%) → 7. Conclusion (5-10%)
-> - **Headline conventions:** Sentence case, 8-14 words, specific over clever
-> - **Lede style:** Data-led, event-led, or provocation-led; no scene-setting
-> - **Visual callouts:** Pull quote, data callout, sidebar
-> - **Resolution style:** Single resolution -- CTA, takeaway, OR open question (no mixing)
-> - **Attribution / Data / Quote / Tone:** Configured
+> - **Headline Conventions:** Sentence case, 8-14 words, specific over clever
+> - **Lede Style:** Data-led, event-led, or provocation-led; no scene-setting
+> - **Visual Callouts:** Pull quote, data callout, sidebar
+> - **Resolution Style:** Single resolution -- CTA, takeaway, OR open question (no mixing)
+> - **Attribution Style:** Inline source name with date; primary sources preferred
+> - **Data Presentation:** Round numbers in prose, baselines required for percentage growth
+> - **Quote Integration:** Full name + title + org on first reference; weave rather than block
+> - **Tone Guidance:** Authoritative but accessible; evidence over assertion
 
 ### 4. Ask What to Refine
 
@@ -64,9 +67,18 @@ Use `AskUserQuestion`:
 
 If **Revise**, loop back to step 5. If **Cancel**, stop. If **Apply**, continue.
 
-### 7. Write Atomically
+### 7. Write in One Pass
 
-Use `Write` to replace `newsroom/content-types/{name}.md` in a single operation with the full updated file. Preserve the section order from the seeder template.
+Use a single `Write` call (not multiple `Edit` calls) to replace `newsroom/content-types/{name}.md` with the full updated file. One pass instead of section-by-section mutation.
+
+**Canonical section order** (matches the bundled `trade-media-article.md` and the seed-content-type output):
+
+1. `## Overview`
+2. `## Structural Template` — content-type-specific named sections in user-defined order
+3. `## Conventions` — `### Headline Conventions`, `### Lede Style`, `### Visual Callouts`, `### Resolution Style`, `### Attribution Style`, `### Data Presentation`, `### Quote Integration`, `### Tone Guidance` (in this order)
+4. `## What Distinguishes This Type` (advisory-only)
+
+If the existing file's section order matches this, preserve it. If it diverges, the diff in step 6 must explicitly include the reorder so the user consents — do not silently rearrange.
 
 ### 8. Confirm
 

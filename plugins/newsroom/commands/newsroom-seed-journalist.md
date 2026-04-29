@@ -52,7 +52,7 @@ Before writing, use `Read` to check whether `newsroom/journalists/{name}.md` alr
 
 If the user chooses **not** to overwrite, stop -- do not proceed further.
 
-### 7. Generate the Voice Profile
+### 6. Generate the Voice Profile
 
 Write a voice profile document to `newsroom/journalists/{name}.md` where `{name}` is the journalist name (lowercase, hyphens for spaces). The document must contain:
 

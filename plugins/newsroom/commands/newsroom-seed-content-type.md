@@ -29,7 +29,12 @@ Handle the choice as the publication seeder does.
 
 ### 3. Run the Socratic Interview
 
-Use `AskUserQuestion` to work through the fields below. Discipline: every section must have a stated **purpose** distinct from its name. If the user says "the Hook section is for the hook", push: "what is the hook doing -- what does the reader feel or know after reading just it?" If the user lists sections that overlap, surface the overlap and ask which one owns the responsibility.
+Use `AskUserQuestion` to work through the fields below. Discipline: every section must have a stated **purpose** distinct from its name.
+
+- **First push:** if the user says "the Hook section is for the hook" (or any tautology that just restates the section name), ask "what is the hook doing — what does the reader feel or know after reading just it?"
+- **Second push:** if the user repeats a tautology, draft 2-3 candidate purpose statements yourself based on the section name and adjacent sections, and ask the user to pick / edit / reject all.
+- **Hard limit:** never accept a third tautological answer. Mark the section purpose `_Not specified during seeding_` and flag it for refinement.
+- If the user lists sections that overlap, surface the overlap and ask which one owns the responsibility.
 
 Capture:
 
@@ -47,23 +52,27 @@ Capture:
    - **What makes it bad** (2-4 bullets)
    - **Optional:** example transition phrases or opening patterns
 
-   The Architect uses this exact structure to build briefs, so be specific. Reference `${CLAUDE_PLUGIN_ROOT}/references/trade-media-article.md` for the level of detail required -- match it.
+   The Architect uses this exact structure to build briefs, so be specific. Reference `${CLAUDE_PLUGIN_ROOT}/references/trade-media-article.md` for the level of detail required -- match it. **Do not copy `<!-- advisory-only -->` markers from the bundled file into your structural-template sections;** those markers exist on the bundled template only for the validator and have no meaning in user files.
 
 4. **Headline conventions** -- Case (sentence vs title), length range, patterns to favour, patterns to avoid. Ask for one acceptable headline and one unacceptable one.
 
 5. **Lede style** -- Distinct from the structural Hook/Lede section: the *patterns* this content type favours and avoids in the opening. Examples of preferred lede patterns (data-led, event-led, question-led, scene-setting, etc.) and patterns to avoid.
 
-6. **Citation and attribution conventions** -- How sources are cited (inline links, footnotes, parenthetical), what level of attribution is required (source name, date, methodology), and how quotes are introduced (full name, title, organisation on first reference?).
+6. **Attribution conventions** -- How sources are cited (inline links, footnotes, parenthetical) and what level of attribution is required (source name, date, methodology where relevant). Ask for one acceptable citation example and one unacceptable one.
 
-7. **Visual callouts** -- Which callouts the type supports (pull quotes, data callouts, sidebars, charts, photo captions, etc.). For each, capture: when to use, length / format, and any rules about frequency.
+7. **Data presentation conventions** -- How statistics, percentages, and chart references are handled. Round numbers vs. precision? Are baselines required for percentages? How are charts referenced inline? Push for a specific rule the user can name (not "we present data well"). Examples: "Always provide a baseline for percentage growth claims"; "Use round numbers in prose, precise numbers in callouts"; "Describe the takeaway, not 'see chart'".
 
-8. **Resolution style** -- How the piece resolves at the very end. Offer the user the standard options (CTA, takeaway, open question) and ask which apply -- and crucially, whether the type permits **mixed** resolutions or enforces a single one. The Architect records the chosen resolution in the brief and the Journalist commits to it; if the type permits mixing, say so explicitly.
+8. **Quote integration conventions** -- How quotes are introduced (full name + title + organisation on first reference?), woven vs. block-quoted, when to paraphrase vs. direct-quote, frequency limits.
+
+9. **Visual callouts** -- Which callouts the type supports (pull quotes, data callouts, sidebars, charts, photo captions, etc.). For each, capture: when to use, length/format, and any rules about frequency.
+
+10. **Resolution style** -- How the piece resolves at the very end. Offer the user the standard options (CTA, takeaway, open question) and ask which apply -- and crucially, whether the type permits **mixed** resolutions or enforces a single one. The Architect records the chosen resolution in the brief and the Journalist commits to it; if the type permits mixing, say so explicitly so the Architect knows it can declare an ordered mix (e.g., "takeaway, then CTA").
 
 #### Optional but useful
 
-9. **Tone guidance** -- General tone characteristics for the type (formal/informal, technical depth, voice register).
+11. **Tone guidance** -- General tone characteristics for the type (formal/informal, technical depth, voice register).
 
-10. **What distinguishes this type from adjacent types** -- E.g., "Trade media article vs general business journalism: assumes domain expertise, prioritises practical implication over narrative." This helps the Architect and Editor avoid mode-confusion.
+12. **What distinguishes this type from adjacent types** -- E.g., "Trade media article vs general business journalism: assumes domain expertise, prioritises practical implication over narrative." This helps the Architect and Editor avoid mode-confusion. (Advisory-only — agents do not consume this directly.)
 
 ### 4. Generate the Content Type Definition
 
@@ -106,7 +115,11 @@ type: content-type
 ### Data Presentation
 ### Quote Integration
 ### Tone Guidance
-### What Distinguishes This Type
+
+---
+
+## What Distinguishes This Type
+<!-- advisory-only -->
 ```
 
 For any optional section the user did not provide, write a one-line placeholder: `_Not specified during seeding -- refine later with `/newsroom-refine-content-type`._`
@@ -118,6 +131,7 @@ The plugin enforces a static contract between bundled templates (`${CLAUDE_PLUGI
 You are writing a **user file** at `newsroom/content-types/{name}.md`, not the bundled template. The validator does not parse user files. However:
 
 - **Stay within the bundled template's convention structure.** Agents only know how to read conventions that exist in the bundled `trade-media-article.md` (Headline Conventions, Lede Style, Visual Callouts, Resolution Style, Attribution Style, Data Presentation, Quote Integration, Tone Guidance). The structural-template sections themselves are content-type-specific and are consumed as a whole via `structural_template`, so you are free to define whatever named sections the user describes -- but invented top-level conventions outside the bundled set will not be read by any agent.
+- **Per-agent input asymmetry:** different agents consume different subsets. The Architect reads `overview`, `structural_template`, `headline_conventions`, `resolution_style`, `tone_guidance`. The Journalist reads all eight conventions. See `<inputs>` declarations under `${CLAUDE_PLUGIN_ROOT}/agents/` for the exact contract. A user tuning their content type for the brief stage should focus on the Architect's subset; for drafting quality, all eight matter.
 - **If the user insists on capturing a convention outside the bundled set**, add it under `## Conventions` with `<!-- advisory-only -->` on the line immediately after the heading. This signals to future maintainers that the field is informational only.
 - **Extending the bundled template is a separate, developer-level change.** It requires updating the `<inputs>` declaration of the consuming agent(s) in the same change, then running `/newsroom-validate` to confirm. Do not touch `${CLAUDE_PLUGIN_ROOT}/references/trade-media-article.md` from within the seeder flow.
 

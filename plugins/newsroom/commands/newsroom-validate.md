@@ -21,17 +21,21 @@ Statically check that every agent's declared inputs exist in the bundled templat
   ```
 - All three child tags are required (use empty content if the agent consumes nothing from that namespace).
 - A `##`-level declaration transitively covers all `###` children of that section.
-- A heading marked with `<!-- advisory-only -->` on the line immediately after it is exempt from orphan checking.
+- A heading is **advisory** if the very next line (no skipping blanks) is exactly the literal string `<!-- advisory-only -->`. A blank line between heading and marker means the heading is NOT advisory. Advisory headings are exempt from orphan checking.
+- HTML comments other than the exact string `<!-- advisory-only -->` (e.g., `<!-- TODO -->`) are ignored for marker detection: they neither mark the heading advisory nor cause a parse error. They are skipped when determining the next non-blank content line.
+- Slugs are **namespaced by parent tag**. `publication.mission` and `content_type.mission` are distinct and do not collide. Cross-namespace lookups never happen.
 
 ## Slug Derivation
 
 For a heading `### Some Heading: Foo's & Bar`:
 1. Strip the leading `#`s and whitespace.
-2. Strip a leading numeric prefix like `1.` or `2.` (digits + dot + optional space).
+2. Strip a leading numeric prefix like `1.` or `2.` (digits + dot + optional whitespace; the whitespace is required, so `1.Hook` would NOT have its prefix stripped — author convention is `1. Hook`).
 3. Lowercase.
-4. Strip apostrophes and quotes (so `Don't` → `Dont`).
-5. Replace any run of non-alphanumeric characters with a single underscore.
+4. Strip these specific quote characters: `'`, `"`, `'` (U+2019), `'` (U+2018), `"` (U+201D), `"` (U+201C), `` ` `` (backtick). Smart quotes auto-inserted by editors are normalised before rule 5.
+5. Replace any run of non-alphanumeric characters (other than `_`) with a single underscore.
 6. Trim leading/trailing underscores.
+
+Headings must be **plain text**: no Markdown link syntax `[text](url)`, no code spans `` `code` ``. Such headings produce undefined slugs — the validator emits a WARNING.
 
 Examples:
 - `## Mission` → `mission`
@@ -39,12 +43,21 @@ Examples:
 - `### 1. Hook/Lede` → `hook_lede`
 - `## Byline, Sign-off, and CTA Conventions` → `byline_sign_off_and_cta_conventions`
 - `### Do's and Don'ts` → `dos_and_donts`
+- `### "Smart" Quotes` → `smart_quotes`
 
 ## Process
 
 ### 1. Resolve Plugin Paths
 
-Use `Bash` (`echo "${CLAUDE_PLUGIN_ROOT}"`) to get the plugin root. The three template files are:
+Use `Bash` (`echo "${CLAUDE_PLUGIN_ROOT}"`) to get the plugin root.
+
+If the value is unset or empty, abort immediately with:
+
+> `ERROR: CLAUDE_PLUGIN_ROOT is not set. This command must run inside a loaded Claude Code plugin context.`
+
+Do not proceed to template parsing.
+
+The three template files are:
 
 - `${CLAUDE_PLUGIN_ROOT}/references/publication-template.md` → namespace `publication`
 - `${CLAUDE_PLUGIN_ROOT}/references/trade-media-article.md` → namespace `content_type`
@@ -61,7 +74,7 @@ For each template:
    - Compute the slug per the rules above.
    - Determine level (`##` = 2, `###` = 3).
    - For `###`, the parent is the most recent preceding `##`.
-   - Look at the very next non-blank line. If it is exactly `<!-- advisory-only -->`, mark this heading as advisory.
+   - Look at the very next line — do NOT skip blanks. If that line is exactly `<!-- advisory-only -->`, mark this heading as advisory. A blank line between heading and marker means the heading is NOT advisory.
    - Add to the template's field list: `(slug, level, parent_slug_or_null, advisory)`.
 3. Verify slug uniqueness within the template. If duplicates exist, emit an ERROR (`duplicate slug "X" in publication-template.md`).
 

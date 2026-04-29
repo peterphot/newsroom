@@ -17,7 +17,15 @@ The publication name is provided as the argument to this command. If no name was
 
 > "What name would you like to give this publication? Use a short slug (lowercase, hyphens for spaces) -- this becomes the filename."
 
-Normalise to lowercase with hyphens.
+Normalise the slug deterministically:
+
+1. Lowercase the input.
+2. Replace each run of whitespace with a single `-`.
+3. Strip every character outside `[a-z0-9-]` (drops apostrophes, ampersands, accents after step 1; transliterate accents only if the user asks).
+4. Collapse repeated `-` runs to a single `-`.
+5. Trim leading and trailing `-`.
+
+Echo the resulting slug back to the user (`Using slug: my-pub`) and confirm before proceeding.
 
 ### 2. Check for Existing Config
 
@@ -45,7 +53,8 @@ If URLs were provided, use `WebFetch` to retrieve each. If a fetch fails, retry 
 
 Use `AskUserQuestion` to work through the fields below. The interview is **Socratic, not extractive**. For every answer:
 
-- If it is vague ("authoritative but accessible", "speaks to marketers", "not too corporate"), ask for a concrete example. Acceptable: a sentence in that voice. A specific reader the user has in mind. A piece they would never publish and why.
+- **Global gate:** before accepting any answer, ask yourself: could a competing publication give the same answer? If yes, push back with "what makes that distinctive to *this* publication?" Reject tone rules, voice examples, mission statements, or audience descriptions that any competent B2B publisher could have produced.
+- If an answer is vague ("authoritative but accessible", "speaks to marketers", "not too corporate"), ask for a concrete example. Acceptable: a sentence in that voice. A specific reader the user has in mind. A piece they would never publish and why.
 - If two answers contradict (e.g., "irreverent" tone but "Bloomberg-style" voice examples), surface the contradiction and ask which one wins.
 - If the user gives a single example, ask for one more so a pattern can be seen.
 
@@ -91,7 +100,7 @@ Capture the following:
 
 ### 6. Generate the Publication Config
 
-Write `newsroom/publications/{name}.md` using the structure of `${CLAUDE_PLUGIN_ROOT}/references/publication-template.md`. The file must include all required sections, in this order:
+Write `newsroom/publications/{name}.md` mirroring the exact section order of `${CLAUDE_PLUGIN_ROOT}/references/publication-template.md`. The file must include all sections in this order:
 
 ```
 ---
@@ -105,6 +114,8 @@ type: publication
 
 ## Brand Voice
 
+## Audience
+
 ## Tone Rules
 ### Always
 ### Never
@@ -114,8 +125,6 @@ type: publication
 ### Out of scope
 
 ## Voice Examples
-
-## Audience
 
 ## Content Pillars
 
@@ -137,7 +146,10 @@ type: publication
 ## Google Docs Output
 ```
 
-Do not leave a section empty. If the user provided no content for an optional section, write a one-line note inside it: `_Not specified during seeding -- refine later with `/newsroom-refine-publication`._`
+**Required vs. optional sections:**
+
+- **Required (must have real content):** Mission, Brand Voice, Audience, Tone Rules, Topical Scope, Voice Examples, Style Rules, Byline/Sign-off/CTA Conventions, Distribution Context, Required Disclosures. If a required field went unanswered or got a generic answer, **loop back to step 5 and re-ask** — do not write the placeholder string.
+- **Optional (placeholder allowed):** Content Pillars, Terminology, Past Content References, Google Docs Output. For these, if the user provided nothing, write the one-line note: `_Not specified during seeding -- refine later with `/newsroom-refine-publication`._`
 
 If the user provided reference URLs, list them under **Past Content References** with a one-line note on what each exemplifies.
 
@@ -148,7 +160,14 @@ The plugin enforces a static contract between bundled templates (`${CLAUDE_PLUGI
 You are writing a **user file** at `newsroom/publications/{name}.md`, not a bundled template. The validator does not parse user files. However:
 
 - **Stay within the bundled template's section structure.** The agents only know how to read sections that exist in the bundled `publication-template.md`. If you invent a new section in a user file, no agent will read it.
-- **If the user insists on capturing something outside the template structure**, append a new `##` section at the end of the file and add `<!-- advisory-only -->` on the line immediately after the heading. This signals to future maintainers that the field is informational only and not consumed by the pipeline.
+- **If the user insists on capturing something outside the template structure**, append a new `##` section at the end of the file and add `<!-- advisory-only -->` on the line **immediately** after the heading — no blank line between heading and marker. The validator only recognises this exact placement. Example:
+
+  ```markdown
+  ## Custom Section Name
+  <!-- advisory-only -->
+
+  Content here...
+  ```
 - **Extending the bundled template is a separate, developer-level change.** It requires updating the `<inputs>` declaration of the consuming agent(s) in the same change, then running `/newsroom-validate` to confirm. Do not touch `${CLAUDE_PLUGIN_ROOT}/references/publication-template.md` from within the seeder flow.
 
 ### 8. Confirm
