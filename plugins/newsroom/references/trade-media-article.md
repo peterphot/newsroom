@@ -16,6 +16,7 @@ A trade media article is a long-form opinion or analysis piece written for an in
 ## Structural Template
 
 ### 1. Hook/Lede
+<!-- advisory-only -->
 
 **Purpose:** The opening that grabs the reader's attention and signals what the piece is about and why it matters right now.
 
@@ -39,6 +40,7 @@ A trade media article is a long-form opinion or analysis piece written for an in
 ---
 
 ### 2. Context
+<!-- advisory-only -->
 
 **Purpose:** Situates the argument in the broader industry landscape. Gives the reader enough background to follow the thesis, without over-explaining what they already know.
 
@@ -62,6 +64,7 @@ A trade media article is a long-form opinion or analysis piece written for an in
 ---
 
 ### 3. Argument
+<!-- advisory-only -->
 
 **Purpose:** The core thesis of the piece, clearly and directly stated. This is the single idea the article exists to advance.
 
@@ -84,6 +87,7 @@ A trade media article is a long-form opinion or analysis piece written for an in
 ---
 
 ### 4. Evidence
+<!-- advisory-only -->
 
 **Purpose:** Data, examples, and research that support the argument. This is where the piece earns its credibility.
 
@@ -109,6 +113,7 @@ A trade media article is a long-form opinion or analysis piece written for an in
 ---
 
 ### 5. Counterpoint
+<!-- advisory-only -->
 
 **Purpose:** Acknowledges and addresses the strongest opposing views. Demonstrates intellectual honesty and strengthens the argument by engaging with objections rather than ignoring them.
 
@@ -133,6 +138,7 @@ A trade media article is a long-form opinion or analysis piece written for an in
 ---
 
 ### 6. Commentary
+<!-- advisory-only -->
 
 **Purpose:** Integrates expert voices and industry perspectives to add authority and texture. These are the voices of practitioners, analysts, and leaders who lend credibility to the argument.
 
@@ -157,6 +163,7 @@ A trade media article is a long-form opinion or analysis piece written for an in
 ---
 
 ### 7. Conclusion
+<!-- advisory-only -->
 
 **Purpose:** Synthesis and forward-looking implications. Tells the reader what to take away and what to watch for next.
 
@@ -180,6 +187,43 @@ A trade media article is a long-form opinion or analysis piece written for an in
 ---
 
 ## Conventions
+<!-- advisory-only -->
+
+### Headline Conventions
+
+- Sentence case, not title case
+- Specific over clever: "Why MMM adoption stalls at the 18-month mark" beats "The MMM mirage"
+- 8-14 words preferred. Subheads / decks may carry up to 20 words to clarify the angle
+- Avoid clickbait constructions ("You won't believe...", "The one thing...")
+- A working headline appears in the brief; the final headline is set at the end of editing
+
+### Lede Style
+
+This content type favours one of three lede patterns:
+
+- **Data-led:** Open with a concrete, surprising statistic. ("Last quarter, X fell by 30% — and most of the industry hasn't noticed yet.")
+- **Event-led:** Anchor to a recent industry move. ("When [Company] announced [move] last week, the reaction was [X]. But the real story is [Y].")
+- **Provocation-led:** Open with a falsifiable claim that some readers will disagree with. ("The conventional wisdom about [topic] is wrong, and the data proves it.")
+
+Avoid scene-setting ledes, dictionary-definition ledes, and throat-clearing ("In recent years..."). The lede must commit to a specific argument inside two sentences. If it could open any article on the topic, it is too generic.
+
+### Visual Callouts
+
+This content type supports the following visual callouts. Use sparingly -- one or two per piece, never as decoration.
+
+- **Pull quote:** A single sentence (under 25 words) drawn from the body, used to break the column visually and reinforce the core argument
+- **Data callout:** A standalone statistic with attribution (number, what it measures, source, date). Used when a single data point anchors the argument
+- **Sidebar:** A short (50-150 word) explanatory aside for a concept that would derail the main flow if explained inline. Used for definitions, methodology notes, or worked examples
+
+### Resolution Style
+
+How the piece resolves at the very end. Choose one (and only one) per article:
+
+- **CTA:** A specific action the reader should take next ("Re-run your last incrementality test against the new baseline.")
+- **Takeaway:** A crystallised one-sentence implication ("The companies treating measurement as compliance are about to be outpaced by the ones treating it as competitive advantage.")
+- **Open question:** A pointed question that frames what the reader should watch for ("So the question isn't whether MMM is ready -- it's whether your team is.")
+
+Avoid mixed resolutions (a CTA plus a takeaway plus a question reads as hedging).
 
 ### Attribution Style
 
@@ -214,6 +258,7 @@ A trade media article is a long-form opinion or analysis piece written for an in
 - Confident but honest: acknowledge uncertainty where it exists rather than overstating
 
 ### What Distinguishes Trade Media from General Business Journalism
+<!-- advisory-only -->
 
 - Trade media assumes domain expertise -- it does not explain basic industry concepts
 - The audience reads for practical implications, not entertainment

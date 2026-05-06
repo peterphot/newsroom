@@ -27,8 +27,14 @@ To use a specific publication and journalist voice:
 
 | Command | Purpose |
 |---------|---------|
-| `/newsroom [--journalist <name>] [--publication <name>]` | Start a new session. Pitch a topic, produce an article. |
+| `/newsroom [--publication <name>] [--journalist <name>]` | Start a new session. Pitch a topic, produce an article. A journalist profile is required (auto-detected if exactly one exists). |
 | `/newsroom-resume [workspace-path]` | Resume an interrupted session. Auto-detects the most recent workspace, or provide a specific path. |
+| `/newsroom-list` | List all publications, journalists, and content types in the current newsroom, with one-line descriptors. |
+| `/newsroom-validate` | Statically check the contract between bundled templates and agent prompts. Run after editing templates or agent inputs. |
+| `/newsroom-seed-publication <name>` | Create a publication config (mission, voice, audience, tone, scope, byline, distribution, disclosures) from a Socratic interview. |
+| `/newsroom-refine-publication <name>` | Refine an existing publication config with new material, corrections, or section updates. |
+| `/newsroom-seed-content-type <name>` | Create a content type definition (structure, headline / lede / callout / resolution conventions) from a Socratic interview. |
+| `/newsroom-refine-content-type <name>` | Refine an existing content type definition. |
 | `/newsroom-seed-journalist <name>` | Create a journalist voice profile from reference articles and style guidance. |
 | `/newsroom-refine-journalist <name>` | Refine an existing voice profile with new material or corrections. |
 
@@ -126,9 +132,10 @@ references/                      # Bundled templates
 newsroom/
   publications/                  # Your brand configs
     _template.md                 # Copied from plugin on first run
-    your-brand.md                # Created by you
+    your-brand.md                # Created by /newsroom-seed-publication (or hand-edited)
   content-types/                 # Article structure definitions
     trade-media-article.md       # Copied from plugin on first run
+    your-content-type.md         # Created by /newsroom-seed-content-type (optional)
   journalists/                   # Voice profiles (created by /newsroom-seed-journalist)
   workspaces/                    # Session workspaces (created per /newsroom run)
     2026-04-13-topic-slug/
@@ -142,6 +149,34 @@ newsroom/
       session-state.json
       session-log.md
 ```
+
+## Inputs Contract
+
+Every agent in `agents/` declares which template fields it consumes via an `<inputs>` block placed immediately after its YAML frontmatter:
+
+```
+<inputs>
+  <publication>mission, tone_rules, voice_examples</publication>
+  <content_type>headline_conventions, structural_template</content_type>
+  <journalist_profile>voice_summary, dos_and_donts</journalist_profile>
+</inputs>
+```
+
+The `/newsroom-validate` command parses the bundled templates in `references/` and verifies:
+
+- Every declared field exists in the relevant template (errors on broken contracts)
+- Every template field is consumed by at least one agent, or marked `<!-- advisory-only -->` (warns on orphans)
+
+When you add a field to a bundled template, update the `<inputs>` declaration of the consuming agent in the same change, then run `/newsroom-validate`.
+
+Field slugs are derived from `##` and `###` headings: strip the leading `#`s, strip any leading numeric prefix like `1. ` (digits + dot + required whitespace), lowercase, drop apostrophes and quotes (`'`, `"`, smart quotes, backticks), replace runs of non-alphanumeric characters with a single underscore, trim leading/trailing underscores. Headings must be plain text (no Markdown links or code spans). Slugs are namespaced by parent tag — `publication.mission` and `content_type.mission` are distinct. A `##` declaration transitively covers all `###` children. Worked example: `## Do's and Don'ts` → `dos_and_donts`. See `/newsroom-validate`'s **Slug Derivation** section for the full algorithm.
+
+### Upgrading from 1.2.x
+
+Journalist profiles seeded by 1.2.x used `####` headings. 1.3.0's validator parses `##`/`###` only — pre-1.3.0 profiles will register zero fields and the journalist agent will not find the structure it expects. To migrate, either:
+
+- Re-run `/newsroom-seed-journalist <name>` to regenerate the profile, or
+- Promote each `#### ` heading in `newsroom/journalists/*.md`: top-level sections (Voice Summary, Detailed Style Notes, Do's and Don'ts, Example Phrases and Patterns, Reference Material Links) become `## `, and the Do/Don't sub-sections under "Do's and Don'ts" become `### `.
 
 ## Architecture
 

@@ -1,6 +1,6 @@
 ---
 description: Start a new newsroom session — pitch a topic and produce a polished trade media article
-argument-hint: [--journalist <name>] [--publication <name>]
+argument-hint: [--publication <name>] [--journalist <name>]
 allowed-tools: Read, Write, Edit, Bash, Glob, Task, AskUserQuestion
 user-invocable: true
 ---
@@ -27,26 +27,44 @@ Read the bundled reference file at `${CLAUDE_PLUGIN_ROOT}/references/trade-media
 **If `newsroom/publications/` is empty (no .md files):**
 Read the bundled reference file at `${CLAUDE_PLUGIN_ROOT}/references/publication-template.md` and copy its contents to `newsroom/publications/_template.md` in the working directory. Tell the user:
 
-> No publication configs found. I've created a template at `newsroom/publications/_template.md`. Copy it, rename it for your brand, and fill in your brand voice, audience, and style rules. Then run `/newsroom` again.
+> No publication configs found. I've created a template at `newsroom/publications/_template.md`. Run `/newsroom-seed-publication <name>` to create one from a Socratic interview, or copy and hand-edit the template. Then run `/newsroom` again.
 
 Then stop — do not proceed without a publication config.
+
+**If `newsroom/journalists/` is empty (no .md files):**
+Read the bundled reference file at `${CLAUDE_PLUGIN_ROOT}/references/journalist-template.md` and copy its contents to `newsroom/journalists/_template.md` in the working directory. Tell the user:
+
+> No journalist voice profiles found. I've created a template at `newsroom/journalists/_template.md`. Run `/newsroom-seed-journalist <name>` to create one from reference articles, or copy and hand-edit the template. Then run `/newsroom` again.
+
+Then stop — do not proceed without a journalist profile. The pipeline does not have a fallback voice; one must be selected explicitly.
 
 ### 2. Parse Arguments
 
 Check for these optional arguments:
 
-- `--journalist <name>` — Journalist voice profile to use. If present, extract the name.
 - `--publication <name>` — Publication config to use (without path or extension). If provided, validate that `newsroom/publications/{name}.md` exists (use `Read` or `Bash`). If the file does not exist, tell the user:
 
   > Publication config not found: `newsroom/publications/{name}.md`. Available publications:
 
-  Then list the `.md` files in `newsroom/publications/` (excluding `_template.md`). Stop — do not proceed.
+  Then list the `.md` files in `newsroom/publications/` (excluding files starting with `_`). Stop — do not proceed.
 
   If not provided, auto-detect:
-  - List `.md` files in `newsroom/publications/` (excluding `_template.md`)
+  - List `.md` files in `newsroom/publications/` (excluding files starting with `_`)
   - If exactly one exists, use it
   - If multiple exist, use `AskUserQuestion` to ask the user which publication to use
-  - If none exist (only `_template.md`), tell the user to create one from the template and stop
+  - If none exist (only template files), tell the user to run `/newsroom-seed-publication <name>` and stop
+
+- `--journalist <name>` — Journalist voice profile to use. **Required.** If provided, validate that `newsroom/journalists/{name}.md` exists. If the file does not exist, tell the user:
+
+  > Journalist profile not found: `newsroom/journalists/{name}.md`. Available journalists:
+
+  Then list the `.md` files in `newsroom/journalists/` (excluding files starting with `_`). Stop — do not proceed.
+
+  If not provided, auto-detect:
+  - List `.md` files in `newsroom/journalists/` (excluding files starting with `_`)
+  - If exactly one exists, use it
+  - If multiple exist, use `AskUserQuestion` to ask the user which journalist to use
+  - If none exist (only template files), tell the user to run `/newsroom-seed-journalist <name>` and stop. The pipeline does not run without a journalist profile.
 
 ### 3. Determine Today's Date
 
@@ -88,7 +106,7 @@ Use the `Task` tool to spawn the Editor agent (subagent_type: `newsroom:editor`)
 
 - **Workspace path:** The full path to the workspace directory you just created
 - **Publication config path:** `newsroom/publications/{publication-name}.md`
-- **Journalist name:** The name from `--journalist <name>` if provided, otherwise omit (Editor will use default voice)
+- **Journalist name:** The selected journalist (required, resolved in step 2)
 
 The Editor takes over from here. It runs the full workflow: strategy, architecture, research, writing, fact-checking, and final delivery. Your job is done.
 
