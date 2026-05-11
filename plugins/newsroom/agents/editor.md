@@ -31,6 +31,7 @@ You receive the following when spawned by the `/newsroom` command or the `/newsr
 - **`WORKSPACE_PATH`** -- The workspace directory for this session (e.g., `newsroom/workspaces/2026-04-13-marketing-measurement/`). All artifacts live here.
 - **`PUBLICATION_CONFIG_PATH`** -- Path to the publication configuration file (e.g., `newsroom/publications/your-brand.md`). Defines brand voice, audience, content pillars, terminology, and style rules. Also defines **Mission**, **Tone Rules** (always / never lists used as revision-loop checks), **Topical Scope** (in/out -- enforce at the strategy gate), **Distribution Context** (route framing accordingly), **Byline / Sign-off / CTA Conventions** (verify at the final-form check), and **Required Disclosures** (verify any triggered disclosure is present at the final gate).
 - **`JOURNALIST_NAME`** -- **Required.** Name of the journalist voice profile to use. The voice profile file is at `newsroom/journalists/{JOURNALIST_NAME}.md`. If this input is missing, halt and report the missing input -- do NOT proceed with a fallback voice. The `/newsroom` command is responsible for ensuring a journalist is selected before spawning you.
+- **`CONTENT_TYPE_PATH`** -- **Required.** Path to the content type definition file (e.g., `newsroom/content-types/trade-media-article.md`). Defines the structural template, headline conventions, lede style, visual callouts, resolution style, attribution style, data presentation, quote integration, and tone guidance for the piece. If this input is missing, halt and report the missing input -- do NOT proceed with a fallback content type. The `/newsroom` command is responsible for ensuring a content type is selected before spawning you. On resume, read `content_type_path` from `session-state.json`; if that field is absent (a pre-content-type-selection workspace), fall back to `newsroom/content-types/trade-media-article.md` and append a `[WARN]` entry to `session-log.md`.
 - **`RESUME_MODE`** -- If true, resume from `session-state.json` in the workspace instead of starting fresh. See the Resume Mode section below.
 
 ---
@@ -53,6 +54,7 @@ Create `session-state.json` in the workspace directory with this initial schema:
   "revision_count": 0,
   "journalist": null,
   "publication_config_path": "<PUBLICATION_CONFIG_PATH>",
+  "content_type_path": "<CONTENT_TYPE_PATH>",
   "gates": {
     "brief_approved": false,
     "research_reviewed": false,
@@ -65,6 +67,7 @@ Create `session-state.json` in the workspace directory with this initial schema:
 
 Set `journalist` to `JOURNALIST_NAME` (required -- never null in a valid session).
 Set `publication_config_path` to `PUBLICATION_CONFIG_PATH`.
+Set `content_type_path` to `CONTENT_TYPE_PATH` (required -- never null in a valid session).
 
 Use `Bash` to get the current ISO timestamp: `date -u +%Y-%m-%dT%H:%M:%SZ`.
 
@@ -86,6 +89,7 @@ Create `session-log.md` in the workspace directory with the opening entry:
 - Workspace: <WORKSPACE_PATH>
 - Publication: <PUBLICATION_CONFIG_PATH>
 - Journalist: <JOURNALIST_NAME>
+- Content type: <CONTENT_TYPE_PATH>
 ```
 
 **If RESUME_MODE is true:**
@@ -109,6 +113,7 @@ This file tracks the current state of the workflow. It lives at `<WORKSPACE_PATH
   "fact_check_pass": 0,
   "journalist": null,
   "publication_config_path": "<PUBLICATION_CONFIG_PATH>",
+  "content_type_path": "<CONTENT_TYPE_PATH>",
   "gates": {
     "brief_approved": false,
     "research_reviewed": false,
@@ -248,12 +253,12 @@ Spawn the Architect to produce a structured brief from the validated topic.
    - Timestamp: <ISO timestamp>
    ```
 
-2. Determine the content type definition path. For v1, this is: `newsroom/content-types/trade-media-article.md`.
+2. Determine the content type definition path. Read `content_type_path` from `session-state.json` (it was set at session startup from the `CONTENT_TYPE_PATH` input). If the field is absent (a pre-content-type-selection workspace being resumed), fall back to `newsroom/content-types/trade-media-article.md` and append a `[WARN]` entry to `session-log.md` noting the fallback. Verify the resolved path exists; if it does not, halt and tell the user which path was expected.
 
 3. Spawn the `architect` agent via `Task`. Pass the following context:
    - The workspace path (`WORKSPACE_PATH`)
    - The publication config path (`PUBLICATION_CONFIG_PATH`)
-   - The content type definition path (`newsroom/content-types/trade-media-article.md`)
+   - The content type definition path (the resolved `content_type_path`)
    - Instruct the architect to read `01-strategy.md`, the publication config, and the content type definition
    - Instruct the architect to output `02-brief.md` to the workspace
 

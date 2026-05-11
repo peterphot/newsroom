@@ -1,6 +1,6 @@
 ---
 description: Start a new newsroom session — pitch a topic and produce a polished trade media article
-argument-hint: [--publication <name>] [--journalist <name>]
+argument-hint: [--publication <name>] [--journalist <name>] [--content-type <name>]
 allowed-tools: Read, Write, Edit, Bash, Glob, Task, AskUserQuestion
 user-invocable: true
 ---
@@ -66,6 +66,18 @@ Check for these optional arguments:
   - If multiple exist, use `AskUserQuestion` to ask the user which journalist to use
   - If none exist (only template files), tell the user to run `/newsroom-seed-journalist <name>` and stop. The pipeline does not run without a journalist profile.
 
+- `--content-type <name>` — Content type definition to use. If provided, validate that `newsroom/content-types/{name}.md` exists. If the file does not exist, tell the user:
+
+  > Content type not found: `newsroom/content-types/{name}.md`. Available content types:
+
+  Then list the `.md` files in `newsroom/content-types/` (excluding files starting with `_`). Stop — do not proceed.
+
+  If not provided, auto-detect:
+  - List `.md` files in `newsroom/content-types/` (excluding files starting with `_`)
+  - If exactly one exists, use it
+  - If multiple exist, use `AskUserQuestion` to ask the user which content type to use. For each option, include a short descriptor: read the file's `## Overview` section and take the first sentence (text up to the first `.`, `!`, or `?` followed by whitespace or end-of-line; if no terminator, the first 120 characters). If the Overview section is absent, fall back to the filename.
+  - If none exist (only template files), tell the user to run `/newsroom-seed-content-type <name>` and stop. The pipeline does not run without a content type definition.
+
 ### 3. Determine Today's Date
 
 Get today's date in `YYYY-MM-DD` format. Use `Bash` to run `date +%Y-%m-%d` and capture the result.
@@ -107,6 +119,7 @@ Use the `Task` tool to spawn the Editor agent (subagent_type: `newsroom:editor`)
 - **Workspace path:** The full path to the workspace directory you just created
 - **Publication config path:** `newsroom/publications/{publication-name}.md`
 - **Journalist name:** The selected journalist (required, resolved in step 2)
+- **Content type path:** `newsroom/content-types/{content-type-name}.md` (required, resolved in step 2)
 
 The Editor takes over from here. It runs the full workflow: strategy, architecture, research, writing, fact-checking, and final delivery. Your job is done.
 
