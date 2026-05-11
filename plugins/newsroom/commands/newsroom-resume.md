@@ -34,7 +34,9 @@ If `session-state.json` does not exist or cannot be read, tell the user: "Sessio
 
 Parse the JSON to determine:
 - The current stage (e.g., PITCH, STRATEGY, ARCHITECTURE, RESEARCH, WRITING, FACT_CHECK, FINALIZATION, etc.)
-- Any other relevant state (revision count, journalist profile, etc.)
+- Any other relevant state (revision count, journalist profile, publication config path, content type path, etc.)
+
+If `content_type_path` is absent from session-state.json, this is a pre-content-type-selection workspace. Do not prompt the user — the Editor will fall back to `newsroom/content-types/trade-media-article.md` and log a `[WARN]` entry on its own.
 
 ## Step 3: Report to user
 
