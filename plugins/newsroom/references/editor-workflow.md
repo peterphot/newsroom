@@ -169,6 +169,18 @@ When you spawn a specialist:
 
 When you need to spawn **multiple independent specialists in parallel** (e.g. the four researchers), issue **all Task calls in a single assistant message**. Sequential Task calls in separate messages execute serially.
 
+### Specialists that need user input
+
+`AskUserQuestion` does not work reliably from a subagent context. Only the orchestrator (you, running at the command layer) can ask the user questions through the proper UI.
+
+When a specialist needs user input, the contract is a **two-mode** spawn:
+
+1. **Mode A — INTERROGATE.** Spawn the specialist with instructions to compose a question plan and write it to a `*-questions.md` file (e.g. `01-strategy-questions.md`). The specialist returns control without touching the user.
+2. **You run `AskUserQuestion`.** Read the question plan. Pose the questions to the user using `AskUserQuestion` (one call per question, or batched into a single multi-question call where appropriate). Capture the answers.
+3. **Mode B — SYNTHESISE.** Spawn the specialist again with the answers (inline in the Task prompt, or via a path to a file you wrote). The specialist judges the answers against its own criteria, optionally requests another round (loop back to step 2), and ultimately produces the canonical output file.
+
+The Strategist is the canonical example of this pattern (see the STRATEGY stage below). The same pattern applies to any future specialist that needs user input.
+
 ## Workflow State Machine
 
 The workflow progresses through these stages in order. Each stage has specific actions and transition criteria. Follow them precisely.
@@ -208,24 +220,30 @@ Spawn the Strategist to interrogate the pitch and produce a validated topic stat
    - Timestamp: <ISO timestamp>
    ```
 
-2. Spawn the `strategist` agent via `Task`. Pass the following context:
-   - The workspace path (`WORKSPACE_PATH`)
-   - Instruct the strategist to read `00-pitch.md` from the workspace
-   - Instruct the strategist to engage the user in Socratic Q&A via `AskUserQuestion`
-   - Instruct the strategist to output `01-strategy.md` to the workspace
+2. **Mode A — INTERROGATE.** Spawn the `strategist` agent via `Task`. Pass:
+   - The absolute workspace path (`WORKSPACE_PATH`).
+   - Instruction: "Run in INTERROGATE mode. Read `00-pitch.md`, compose 3–5 Socratic questions, and write `01-strategy-questions.md`. Do not produce `01-strategy.md` yet."
 
-3. Wait for the Strategist to complete. The Strategist will interact with the user directly via `AskUserQuestion` -- you do not need to mediate this interaction.
+3. Read `01-strategy-questions.md` from the workspace. Pose the questions to the user via `AskUserQuestion`. You may batch them into a single multi-question call if they are independent; ask sequentially if later questions depend on earlier answers.
 
-4. Read `01-strategy.md` from the workspace.
+4. Write the user's answers to `01-strategy-answers.md` in the workspace, mirroring the question structure (Q1 / answer, Q2 / answer, …).
 
-5. **Review the output.** Evaluate:
+5. **Mode B — SYNTHESISE.** Spawn the `strategist` agent again via `Task`. Pass:
+   - The absolute workspace path.
+   - Instruction: "Run in SYNTHESISE mode. Read `00-pitch.md`, `01-strategy-questions.md`, and `01-strategy-answers.md`. Judge the answers against your own criteria. If one or more answers are weak and another round would help, overwrite `01-strategy-questions.md` with a Round 2 question plan and return control. Otherwise, produce `01-strategy.md` with the interrogation log and validated topic statement."
+
+6. If the strategist produced a new `01-strategy-questions.md` (indicating it wants another round): loop back to step 3. Cap at two rounds unless escalation to the user (via `AskUserQuestion`) confirms a third.
+
+7. Read `01-strategy.md` from the workspace.
+
+8. **Review the output.** Evaluate:
    - Does the validated topic statement have a clear thesis? Not a topic, not a theme -- an argument.
    - Is it focused? Does it try to be about too many things?
    - Is the audience clear?
    - Is the timeliness angle established?
    - Does the interrogation log show genuine pushback?
 
-6. **If insufficient:**
+9. **If insufficient:**
    - Append to session-log.md:
      ```
      ## [FEEDBACK] Strategy output insufficient
@@ -233,10 +251,10 @@ Spawn the Strategist to interrogate the pitch and produce a validated topic stat
      - Issues: <specific issues found>
      - Action: Re-spawning strategist with feedback
      ```
-   - Re-spawn the strategist via `Task` with specific notes about what needs improvement. Include the issues you identified.
+   - Re-spawn the strategist via `Task` in SYNTHESISE mode with specific notes about what needs improvement. Include the issues you identified and instruct it to revise `01-strategy.md` directly (no further interrogation rounds at this point).
    - Read the new `01-strategy.md` and re-evaluate.
 
-7. **If satisfactory:**
+10. **If satisfactory:**
    - Append to session-log.md:
      ```
      ## [DECISION] Strategy approved
@@ -982,7 +1000,7 @@ Based on the current stage, read all artifacts that have been produced so far. T
 | Stage resuming from | Read these artifacts |
 |---------------------|---------------------|
 | PITCH | `00-pitch.md` |
-| STRATEGY | `00-pitch.md` |
+| STRATEGY | `00-pitch.md`, `01-strategy-questions.md` (if mid-interrogation), `01-strategy-answers.md` (if answered) |
 | ARCHITECTURE | `00-pitch.md`, `01-strategy.md` |
 | BRIEF_GATE | `00-pitch.md`, `01-strategy.md`, `02-brief.md` |
 | RESEARCH | `00-pitch.md`, `01-strategy.md`, `02-brief.md` |
@@ -1071,7 +1089,9 @@ All files live in the workspace directory (`WORKSPACE_PATH`):
 | File | Purpose |
 |------|---------|
 | `00-pitch.md` | User's raw pitch (created by `/newsroom` command) |
-| `01-strategy.md` | Validated topic statement (created by strategist) |
+| `01-strategy-questions.md` | Socratic question plan (created by strategist in INTERROGATE mode; transient — may be overwritten between rounds) |
+| `01-strategy-answers.md` | User's answers to the question plan (written by the orchestrator after running `AskUserQuestion`) |
+| `01-strategy.md` | Validated topic statement (created by strategist in SYNTHESISE mode) |
 | `02-brief.md` | Structured brief (created by architect) |
 | `03-research/data-research.md` | Data and statistics (created by data-researcher) |
 | `03-research/industry-research.md` | Industry landscape (created by industry-researcher) |
