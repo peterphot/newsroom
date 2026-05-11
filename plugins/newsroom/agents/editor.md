@@ -939,7 +939,7 @@ When spawned with `RESUME_MODE = true` (by the `/newsroom-resume` command):
 
 ### 1. Read Session State
 
-Read `session-state.json` from the workspace directory. Parse the current stage, revision count, journalist name, publication config path, and gate statuses. Use the `publication_config_path` from the state file to load the publication config (this replaces the `PUBLICATION_CONFIG_PATH` input which is only available on initial launch).
+Read `session-state.json` from the workspace directory. Parse the current stage, revision count, journalist name, publication config path, content type path, and gate statuses. Use the `publication_config_path` from the state file to load the publication config (this replaces the `PUBLICATION_CONFIG_PATH` input which is only available on initial launch). Use the `content_type_path` from the state file as the resolved content type definition (it replaces the `CONTENT_TYPE_PATH` input on resume); if absent (a pre-content-type-selection workspace), fall back to `newsroom/content-types/trade-media-article.md` and append a `[WARN]` entry to `session-log.md`.
 
 **Validate the stage value.** The `stage` field must be one of: `PITCH`, `STRATEGY`, `ARCHITECTURE`, `BRIEF_GATE`, `RESEARCH`, `RESEARCH_GATE`, `WRITING`, `REVISION_LOOP`, `FACT_CHECK`, `FACT_CHECK_GATE`, `FINALIZATION`, `FINAL_GATE`, `PUBLISH`, `COMPLETE`. If it does not match any of these, inform the user: "Unknown stage '<stage>' in session-state.json. This session state may be corrupted or was created by a different version of the plugin." Then stop -- do not attempt to resume.
 
