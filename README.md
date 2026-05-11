@@ -182,15 +182,15 @@ Journalist profiles seeded by 1.2.x used `####` headings. 1.3.0's validator pars
 
 This is a prompt-engineering project. Every deliverable is a Markdown file -- there is no application code. Each agent is a `.md` system prompt file that Claude Code loads as context.
 
-The `/newsroom` command does minimal setup (scaffolds directories if needed, creates workspace, captures pitch) then spawns the Editor agent via `Task`. The Editor contains the entire workflow as a state machine and uses `Task` to spawn other agents as subagents. All inter-agent communication happens via files on disk in the workspace folder.
+The `/newsroom` command does minimal setup (scaffolds directories if needed, creates workspace, captures pitch) then loads the canonical workflow spec at `plugins/newsroom/references/editor-workflow.md` and runs the editorial state machine **in the user's primary conversation**. Hosting the orchestrator at the command layer (rather than as a subagent) is required so the `Task` tool is available for spawning specialist subagents — Claude Code does not reliably support nested Task invocation from inside a subagent. The orchestrator (playing the Editor role) spawns specialist subagents one level deep: strategist, architect, the four researchers in parallel, research-lead for synthesis, journalist, and fact-checker. `/newsroom-resume` loads the same spec in resume mode. All inter-agent communication happens via files on disk in the workspace folder.
 
 ## Design Decisions
 
 | Decision | Choice | Why |
 |----------|--------|-----|
-| Editor-as-orchestrator | Monolithic state machine | Mirrors real newsrooms. Editor has judgment to gate, push back, route. Single prompt contains all workflow logic. |
+| Editor-as-orchestrator | State machine hosted at the slash-command layer | Mirrors real newsrooms — the Editor has judgment to gate, push back, route. Running at the command layer (not as a subagent) keeps `Task` available for spawning specialists. Single spec file (`references/editor-workflow.md`) contains all workflow logic. |
 | Files on disk for state | Workspace folder | Simple, auditable, versionable. No databases. Enables session resume. |
-| Parallel research | 4 concurrent `Task` calls | Research Lead spawns all researchers simultaneously. ~4x faster than sequential. |
+| Parallel research | 4 concurrent `Task` calls | The orchestrator spawns all four researchers simultaneously in a single message; the research-lead synthesises the outputs. ~4x faster than sequential. |
 | 3-round revision cap | Escalate to user after 3 rounds | Prevents infinite loops. User gets current draft + Editor notes to decide. |
 | Installable plugin | Code separate from runtime data | Plugin installs once via marketplace. Each working directory is an independent newsroom with its own config. |
 | Lazy initialization | Scaffold on first `/newsroom` run | No setup command needed. Plugin creates the directory structure and copies templates automatically. |

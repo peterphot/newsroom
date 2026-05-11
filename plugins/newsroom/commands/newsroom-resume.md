@@ -1,13 +1,13 @@
 ---
 description: Resume an interrupted newsroom session from where it left off
 argument-hint: [workspace-path]
-allowed-tools: Read, Write, Bash, Glob, Task
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, AskUserQuestion
 user-invocable: true
 ---
 
 # Resume Newsroom Session
 
-Resume an interrupted newsroom session from where it left off.
+Resume an interrupted newsroom session from where it left off. Steps 1–3 locate and validate the workspace. Step 4 loads the canonical Editor workflow spec and runs it **in this conversation** — the orchestrator is hosted at the command layer (not as a subagent) so that the `Task` tool is available for spawning specialist subagents.
 
 ## Step 1: Determine workspace path
 
@@ -44,15 +44,14 @@ Tell the user which workspace is being resumed and from which stage. For example
 
 > Resuming newsroom session from workspace `newsroom/workspaces/2026-04-13-ai-marketing-trends/` at stage **RESEARCH**.
 
-## Step 4: Spawn Editor in resume mode
+## Step 4: Run the Editor Workflow in resume mode
 
-Use the `Task` tool to spawn the Editor agent in RESUME mode:
+Read the canonical workflow spec at `${CLAUDE_PLUGIN_ROOT}/references/editor-workflow.md`. From this point on, execute the state machine described in that file **in this same conversation**. You take on the Editor role. Use the following inputs:
 
-- **subagent_type:** `newsroom:editor`
-- **Instructions:** Pass the following context to the Editor:
-  - The workspace path
-  - The current stage from session-state.json
-  - Instruction to resume the workflow from where the session left off (do not restart from the beginning)
-  - The full contents of session-state.json so the Editor has complete state context
+- **`WORKSPACE_PATH`:** The absolute path to the workspace resolved in Step 1.
+- **`PUBLICATION_CONFIG_PATH`:** Read from `session-state.json` (`publication_config_path` field). The spec's Resume Mode section governs how to load it.
+- **`JOURNALIST_NAME`:** Read from `session-state.json` (`journalist` field).
+- **`CONTENT_TYPE_PATH`:** Read from `session-state.json` (`content_type_path` field). If absent, the spec's Resume Mode falls back to `newsroom/content-types/trade-media-article.md` and logs a `[WARN]`.
+- **`RESUME_MODE`:** `true`.
 
-The Editor will pick up the workflow from the last completed stage and continue through the remaining stages.
+Follow the **Resume Mode** section of the spec. It will read `session-state.json`, validate the stage, log a resume entry, read the artefacts produced so far, and jump to the recorded stage. The spec governs everything from there.

@@ -1,13 +1,13 @@
 ---
 description: Start a new newsroom session — pitch a topic and produce a polished trade media article
 argument-hint: [--publication <name>] [--journalist <name>] [--content-type <name>]
-allowed-tools: Read, Write, Edit, Bash, Glob, Task, AskUserQuestion
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, AskUserQuestion
 user-invocable: true
 ---
 
 # /newsroom
 
-You are the entry point for the newsroom. Your job is thin: ensure the newsroom directory structure exists, set up the workspace, capture the pitch, and hand off to the Editor. You do NOT run the workflow yourself.
+You are the entry point for the newsroom. Steps 1–7 set up the workspace and capture the pitch. Step 8 loads the canonical Editor workflow spec and runs it **in this conversation** — the orchestrator is hosted at the command layer (not as a subagent) so that the `Task` tool is available for spawning specialist subagents.
 
 ## Steps
 
@@ -112,20 +112,20 @@ Use `Bash` with `mkdir -p` to create the directory.
 
 Write the user's raw pitch text to `00-pitch.md` in the workspace directory. The file should contain the pitch exactly as the user provided it, with no modifications.
 
-### 8. Spawn the Editor
+### 8. Run the Editor Workflow
 
-Use the `Task` tool to spawn the Editor agent (subagent_type: `newsroom:editor`). Pass the following context:
+Read the canonical workflow spec at `${CLAUDE_PLUGIN_ROOT}/references/editor-workflow.md`. From this point on, execute the state machine described in that file **in this same conversation**. You take on the Editor role. Use the following inputs:
 
-- **Workspace path:** The full path to the workspace directory you just created
-- **Publication config path:** `newsroom/publications/{publication-name}.md`
-- **Journalist name:** The selected journalist (required, resolved in step 2)
-- **Content type path:** `newsroom/content-types/{content-type-name}.md` (required, resolved in step 2)
+- **`WORKSPACE_PATH`:** The absolute path to the workspace directory created in step 6.
+- **`PUBLICATION_CONFIG_PATH`:** `newsroom/publications/{publication-name}.md` (resolved in step 2).
+- **`JOURNALIST_NAME`:** The selected journalist (required, resolved in step 2).
+- **`CONTENT_TYPE_PATH`:** `newsroom/content-types/{content-type-name}.md` (required, resolved in step 2).
+- **`RESUME_MODE`:** `false`.
 
-The Editor takes over from here. It runs the full workflow: strategy, architecture, research, writing, fact-checking, and final delivery. Your job is done.
+Start at the PITCH stage. Follow the spec's stage instructions in order. The spec governs everything from here: spawning specialists via `Task`, gating with `AskUserQuestion`, persisting `session-state.json` and `session-log.md`, and publishing the final article.
 
 ## Boundaries
 
-- You are a THIN setup command. You initialize the structure, create the workspace, capture the pitch, and hand off.
-- You do NOT run any part of the editorial workflow.
-- You do NOT make editorial decisions.
-- All workflow logic lives in the Editor agent.
+- Steps 1–7 are pure setup — directory scaffolding, argument parsing, pitch capture, workspace creation.
+- Step 8 hands control to the workflow spec. Once loaded, that spec is the source of truth for stage logic, agent spawning, and gates.
+- Do NOT spawn the workflow as a subagent. Nested Task invocation is not reliably supported; the orchestrator must run at the command layer to have access to `Task`.
