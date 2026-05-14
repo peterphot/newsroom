@@ -1,6 +1,6 @@
 ---
 description: Start a new newsroom session — pitch a topic and produce a polished trade media article
-argument-hint: [--publication <name>] [--journalist <name>] [--content-type <name>]
+argument-hint: [--publication <name>] [--journalist <name>] [--content-type <name>] [--depth <none|quick|standard|deep>]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, AskUserQuestion
 user-invocable: true
 ---
@@ -78,6 +78,14 @@ Check for these optional arguments:
   - If multiple exist, use `AskUserQuestion` to ask the user which content type to use. For each option, include a short descriptor: read the file's `## Overview` section and take the first sentence (text up to the first `.`, `!`, or `?` followed by whitespace or end-of-line; if no terminator, the first 120 characters). If the Overview section is absent, fall back to the filename.
   - If none exist (only template files), tell the user to run `/newsroom-seed-content-type <name>` and stop. The pipeline does not run without a content type definition.
 
+- `--depth <level>` — Research depth. Valid values: `none`, `quick`, `standard`, `deep`. Controls how much research is done before writing:
+  - `none` — skip the research stage entirely
+  - `quick` — only data + industry researchers, tight quotas (~10 sources)
+  - `standard` — all 4 researchers, moderate quotas (~40–50 sources)
+  - `deep` — all 4 researchers, unbounded (current default behavior, ~100–150 sources)
+
+  If provided and the value is not one of the four levels, tell the user the valid values and stop. If provided, store as `DEPTH_OVERRIDE` and pass to the workflow. If not provided, set `DEPTH_OVERRIDE` to `null` — the Strategist will ask the user during interrogation.
+
 ### 3. Determine Today's Date
 
 Get today's date in `YYYY-MM-DD` format. Use `Bash` to run `date +%Y-%m-%d` and capture the result.
@@ -120,6 +128,7 @@ Read the canonical workflow spec at `${CLAUDE_PLUGIN_ROOT}/references/editor-wor
 - **`PUBLICATION_CONFIG_PATH`:** `newsroom/publications/{publication-name}.md` (resolved in step 2).
 - **`JOURNALIST_NAME`:** The selected journalist (required, resolved in step 2).
 - **`CONTENT_TYPE_PATH`:** `newsroom/content-types/{content-type-name}.md` (required, resolved in step 2).
+- **`DEPTH_OVERRIDE`:** The value of `--depth` if provided, otherwise `null`.
 - **`RESUME_MODE`:** `false`.
 
 Start at the PITCH stage. Follow the spec's stage instructions in order. The spec governs everything from here: spawning specialists via `Task`, gating with `AskUserQuestion`, persisting `session-state.json` and `session-log.md`, and publishing the final article.

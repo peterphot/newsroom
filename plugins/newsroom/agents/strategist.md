@@ -32,6 +32,30 @@ Read `<WORKSPACE_PATH>/00-pitch.md` (absolute path supplied in your Task prompt)
 
 #### 2. Compose the Interrogation Questions
 
+The orchestrator will tell you in the Task prompt whether a research depth has already been set (`DEPTH_OVERRIDE` was passed to `/newsroom`). If **no depth has been set**, you MUST include one additional question at the end of the question plan that asks the user to choose a research depth:
+
+> **Q(last): Research depth.** How much research should I do before writing? Pick one:
+> - **deep** — exhaustive, ~100–150 sources. Investigative or flagship pieces.
+> - **standard** — balanced, ~40–50 sources. Default for trade-media articles.
+> - **quick** — fast, ~10 sources, data + industry only. Reactive piece, single hook.
+> - **none** — skip research entirely. Pure opinion/commentary, or you'll supply source material.
+
+If the user might pick `none`, also add a follow-up question (the orchestrator will only ask it conditionally based on the answer to the depth question — phrase your follow-up so the orchestrator knows when to pose it):
+
+> **Q(last+1, only if depth = none): None mode.** Should I write from (a) `model_knowledge` only, or (b) `user_supplied` source material that you'll paste? If `user_supplied`, paste the material in your answer.
+
+The depth question is operational, not Socratic. It does not need a "Criterion for a good answer" line — any of the four values is acceptable. Mark it clearly so the orchestrator can route it correctly:
+
+```markdown
+## Q(last): Research depth [OPERATIONAL]
+<the question as above>
+
+**Type:** operational (depth selection)
+**Valid answers:** deep, standard, quick, none
+```
+
+If the orchestrator's Task prompt says **a depth was already set via `--depth`**, do NOT include the depth question. The user has already chosen.
+
 Compose 3–5 Socratic questions that pressure-test the pitch. You are a demanding editor — push back hard, challenge assumptions, force clarity. Each question must have a clear purpose and be specific to *this* pitch, not generic.
 
 Anchor your questions in these dimensions (hit all that apply; do not pad with ones that don't):
@@ -86,6 +110,15 @@ Write `<WORKSPACE_PATH>/01-strategy.md` (absolute path). It must contain:
 
 1. **Interrogation Log** — The full Q&A exchange (questions, answers, your judgments), preserved verbatim.
 2. **Validated Topic Statement** — The final, sharpened articulation of the piece: what it argues, who it is for, why it matters now, what makes it original.
+3. **Operational fields** (only if the user answered the depth question; omit otherwise so the orchestrator falls back to `deep`). Write these as a fenced block at the bottom of the file so the orchestrator can grep them deterministically:
+
+```
+Depth: <none|quick|standard|deep>
+None mode: <model_knowledge|user_supplied>   # only if Depth == none
+User-supplied material: <inline text or "see 03-research/user-supplied.md">   # only if None mode == user_supplied
+```
+
+Validate the depth value before writing — if the user typed something other than the four valid values, treat the depth answer as weak and request another round.
 
 If the idea did not hold up under interrogation, say so explicitly in the Validated Topic Statement section. A weak idea killed early saves everyone time. The orchestrator will route accordingly.
 

@@ -20,6 +20,14 @@ The orchestrator (the `/newsroom` slash command) has already spawned the four re
 
 You will receive an absolute workspace path and four absolute researcher-output paths when spawned (e.g. `/Users/.../newsroom/workspaces/2026-04-14-topic-slug` and the four `03-research/*.md` files). ALL file reads and writes MUST use the full absolute path. Never use relative paths.
 
+## Budget Directive
+
+If your Task prompt includes a `### Budget` block, treat it as a directive that shapes how terse and selective your synthesis should be. The block will indicate the session's research depth (`quick` or `standard`); at `deep` no block is passed and you produce the full synthesis.
+
+- **Depth: quick** — Two researcher outputs are real (data, industry); counter-arguments.md and commentary-research.md will be one-line "Skipped" placeholders. Do NOT treat the placeholders as content. Lead `research-package.md` with the top 5–8 facts only. Skip redundant context. Keep `gaps.md` to one or two lines.
+- **Depth: standard** — All four researcher outputs are real but each has a tight per-source budget. Synthesise into a balanced package: include the strongest evidence from each researcher, dedupe aggressively, keep the package readable in one sitting.
+- **No Budget block (deep)** — Produce the full synthesis described below with no truncation.
+
 ## Process
 
 ### 1. Read the Brief and All Four Researcher Outputs

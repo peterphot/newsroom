@@ -29,6 +29,17 @@ Read the assignment provided when you are spawned to understand exactly what com
 
 You MUST write your full output to the absolute file path provided in your assignment using the `Write` tool. You MUST NOT return the research content inline in your Task response — only a short confirmation message ("Wrote commentary research to <path>. N experts found across supportive/critical/nuanced sections."). Returning content inline is a contract violation: downstream agents read your file from disk, not from your Task return value, and the orchestrator should not have to save your work for you.
 
+## Budget Directive
+
+If your Task prompt includes a `### Budget` block, the values stated there are **hard upper limits**. Specifically:
+
+- `Max searches: N` — issue at most N `WebSearch` calls total (expert discovery + quote sourcing combined).
+- `Max sources: N` — include at most N distinct experts/quotes in your output file.
+
+Stop searching as soon as either limit is reached, even if more perspectives remain unsourced. Prioritize a small diverse set (e.g. one supportive, one critical, one nuanced) over a long roster of similar voices. Note any missing perspectives under your gaps section.
+
+If no `### Budget` block is present, behave as before (unbounded — find a comprehensive expert roster).
+
 ## Process
 
 ### 1. Identify Relevant Experts

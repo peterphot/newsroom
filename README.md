@@ -23,11 +23,30 @@ To use a specific publication and journalist voice:
 /newsroom --publication acme --journalist jane-smith
 ```
 
+### Research depth
+
+Not every piece needs exhaustive research. Use `--depth` to control how much research runs before writing:
+
+| Depth | Researchers spawned | Per-researcher budget | Typical sources | Use case |
+|-------|---------------------|-----------------------|-----------------|----------|
+| `none` | none (RESEARCH skipped) | — | 0 (or user-supplied) | Pure opinion / commentary, fastest turnaround |
+| `quick` | data + industry only | 2 searches, 6 sources each | ~10 | Reactive piece, single hook |
+| `standard` | all 4 | 4 searches, 12 sources each | ~40–50 | Balanced default |
+| `deep` | all 4 | unbounded | ~100–150 | Investigative / flagship pieces |
+
+```
+/newsroom --depth quick
+/newsroom --depth none      # then choose model-knowledge or user-supplied mode at the strategist
+/newsroom --depth deep      # current default if you omit the flag
+```
+
+If you don't pass `--depth`, the Strategist will ask you during interrogation. The chosen depth is sticky for the rest of the session — `/newsroom-resume` always uses the stored depth and ignores any flag.
+
 ## Slash Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/newsroom [--publication <name>] [--journalist <name>]` | Start a new session. Pitch a topic, produce an article. A journalist profile is required (auto-detected if exactly one exists). |
+| `/newsroom [--publication <name>] [--journalist <name>] [--content-type <name>] [--depth <none\|quick\|standard\|deep>]` | Start a new session. Pitch a topic, produce an article. A journalist profile is required (auto-detected if exactly one exists). `--depth` controls research effort (see Research depth below). |
 | `/newsroom-resume [workspace-path]` | Resume an interrupted session. Auto-detects the most recent workspace, or provide a specific path. |
 | `/newsroom-list` | List all publications, journalists, and content types in the current newsroom, with one-line descriptors. |
 | `/newsroom-validate` | Statically check the contract between bundled templates and agent prompts. Run after editing templates or agent inputs. |

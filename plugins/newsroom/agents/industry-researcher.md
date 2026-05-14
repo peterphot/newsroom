@@ -25,6 +25,17 @@ You receive a research assignment from the orchestrator (the `/newsroom` or `/ne
 
 You MUST write your full output to the absolute file path provided in your assignment using the `Write` tool. You MUST NOT return the research content inline in your Task response — only a short confirmation message ("Wrote industry research to <path>. N players / trends mapped."). Returning content inline is a contract violation: downstream agents read your file from disk, not from your Task return value, and the orchestrator should not have to save your work for you.
 
+## Budget Directive
+
+If your Task prompt includes a `### Budget` block, the values stated there are **hard upper limits**. Specifically:
+
+- `Max searches: N` — issue at most N `WebSearch` calls across all categories combined (key players, recent moves, trends, analyst perspectives).
+- `Max sources: N` — include at most N distinct sources in your output file.
+
+Stop searching as soon as either limit is reached, even if more categories remain. Prioritize the most strategically relevant players and the most recent moves over breadth. Note any dropped categories under your gaps section.
+
+If no `### Budget` block is present, behave as before (unbounded — map the terrain exhaustively).
+
 ## Process
 
 ### 1. Understand the Assignment

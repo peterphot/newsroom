@@ -1,6 +1,6 @@
 ---
 description: Resume an interrupted newsroom session from where it left off
-argument-hint: [workspace-path]
+argument-hint: [workspace-path] [--depth <ignored-on-resume>]
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task, AskUserQuestion
 user-invocable: true
 ---
@@ -34,15 +34,19 @@ If `session-state.json` does not exist or cannot be read, tell the user: "Sessio
 
 Parse the JSON to determine:
 - The current stage (e.g., PITCH, STRATEGY, ARCHITECTURE, RESEARCH, WRITING, FACT_CHECK, FINALIZATION, etc.)
-- Any other relevant state (revision count, journalist profile, publication config path, content type path, etc.)
+- Any other relevant state (revision count, journalist profile, publication config path, content type path, research depth, etc.)
+
+If the user passed a `--depth` flag to `/newsroom-resume`, ignore it and warn them: "`--depth` is ignored on resume — research depth is sticky once a session starts. Continuing with depth `<research.depth from session-state.json>`." Depth can only be changed by starting a new session with `/newsroom`.
 
 If `content_type_path` is absent from session-state.json, this is a pre-content-type-selection workspace. Do not prompt the user — the Editor will fall back to `newsroom/content-types/trade-media-article.md` and log a `[WARN]` entry on its own.
 
 ## Step 3: Report to user
 
-Tell the user which workspace is being resumed and from which stage. For example:
+Tell the user which workspace is being resumed and from which stage. Include the research depth if one is recorded. For example:
 
-> Resuming newsroom session from workspace `newsroom/workspaces/2026-04-13-ai-marketing-trends/` at stage **RESEARCH**.
+> Resuming newsroom session from workspace `newsroom/workspaces/2026-04-13-ai-marketing-trends/` at stage **RESEARCH** (depth: **standard**).
+
+If `research.depth` is absent from `session-state.json` (pre-depth-feature workspaces), omit the depth from the message and proceed — the Editor will default to `deep` if it reaches the RESEARCH stage with no depth set.
 
 ## Step 4: Run the Editor Workflow in resume mode
 
@@ -52,6 +56,7 @@ Read the canonical workflow spec at `${CLAUDE_PLUGIN_ROOT}/references/editor-wor
 - **`PUBLICATION_CONFIG_PATH`:** Read from `session-state.json` (`publication_config_path` field). The spec's Resume Mode section governs how to load it.
 - **`JOURNALIST_NAME`:** Read from `session-state.json` (`journalist` field).
 - **`CONTENT_TYPE_PATH`:** Read from `session-state.json` (`content_type_path` field). If absent, the spec's Resume Mode falls back to `newsroom/content-types/trade-media-article.md` and logs a `[WARN]`.
+- **`DEPTH_OVERRIDE`:** `null` (ignored on resume — depth is sticky; the workflow reads `research.depth` from `session-state.json`).
 - **`RESUME_MODE`:** `true`.
 
 Follow the **Resume Mode** section of the spec. It will read `session-state.json`, validate the stage, log a resume entry, read the artefacts produced so far, and jump to the recorded stage. The spec governs everything from there.

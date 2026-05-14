@@ -28,6 +28,7 @@ The invoking slash command (`/newsroom` or `/newsroom-resume`) supplies the foll
 - **`PUBLICATION_CONFIG_PATH`** -- Path to the publication configuration file (e.g., `newsroom/publications/your-brand.md`). Defines brand voice, audience, content pillars, terminology, and style rules. Also defines **Mission**, **Tone Rules** (always / never lists used as revision-loop checks), **Topical Scope** (in/out -- enforce at the strategy gate), **Distribution Context** (route framing accordingly), **Byline / Sign-off / CTA Conventions** (verify at the final-form check), and **Required Disclosures** (verify any triggered disclosure is present at the final gate).
 - **`JOURNALIST_NAME`** -- **Required.** Name of the journalist voice profile to use. The voice profile file is at `newsroom/journalists/{JOURNALIST_NAME}.md`. If this input is missing, halt and report the missing input -- do NOT proceed with a fallback voice. The `/newsroom` command is responsible for ensuring a journalist is selected before spawning you.
 - **`CONTENT_TYPE_PATH`** -- **Required.** Path to the content type definition file (e.g., `newsroom/content-types/trade-media-article.md`). Defines the structural template, headline conventions, lede style, visual callouts, resolution style, attribution style, data presentation, quote integration, and tone guidance for the piece. If this input is missing, halt and report the missing input -- do NOT proceed with a fallback content type. The `/newsroom` command is responsible for ensuring a content type is selected before spawning you. On resume, read `content_type_path` from `session-state.json`; if that field is absent (a pre-content-type-selection workspace), fall back to `newsroom/content-types/trade-media-article.md` and append a `[WARN]` entry to `session-log.md`.
+- **`DEPTH_OVERRIDE`** -- Optional. Research depth specified by the user via `--depth` on the `/newsroom` command. One of `none`, `quick`, `standard`, `deep`, or `null` if not provided. When `null`, the Strategist will ask the user during interrogation. When set, this value wins over any Strategist answer. On resume, this input is ignored (the depth stored in `session-state.json` is authoritative — depth is sticky once research starts); if the user passed `--depth` to `/newsroom-resume`, the resume command warns them and uses the stored value.
 - **`RESUME_MODE`** -- True when invoked by `/newsroom-resume`, false when invoked by `/newsroom`. When true, resume from `session-state.json` in the workspace instead of starting fresh. See the Resume Mode section below.
 
 ---
@@ -57,6 +58,12 @@ Create `session-state.json` in the workspace directory with this initial schema:
     "research_reviewed": false,
     "final_approved": false
   },
+  "research": {
+    "depth": null,
+    "depth_source": null,
+    "none_mode": null,
+    "user_supplied_path": null
+  },
   "started_at": "<ISO timestamp>",
   "last_updated": "<ISO timestamp>"
 }
@@ -65,6 +72,7 @@ Create `session-state.json` in the workspace directory with this initial schema:
 Set `journalist` to `JOURNALIST_NAME` (required -- never null in a valid session).
 Set `publication_config_path` to `PUBLICATION_CONFIG_PATH`.
 Set `content_type_path` to `CONTENT_TYPE_PATH` (required -- never null in a valid session).
+Leave the `research` block fields null at session start; they are populated at the end of STRATEGY (see depth resolution below).
 
 Use `Bash` to get the current ISO timestamp: `date -u +%Y-%m-%dT%H:%M:%SZ`.
 
@@ -115,6 +123,12 @@ This file tracks the current state of the workflow. It lives at `<WORKSPACE_PATH
     "brief_approved": false,
     "research_reviewed": false,
     "final_approved": false
+  },
+  "research": {
+    "depth": "none|quick|standard|deep|null",
+    "depth_source": "flag|strategist|default|null",
+    "none_mode": "model_knowledge|user_supplied|null",
+    "user_supplied_path": "03-research/user-supplied.md|null"
   },
   "started_at": "ISO timestamp",
   "last_updated": "ISO timestamp"
@@ -224,9 +238,12 @@ Spawn the Strategist to interrogate the pitch and produce a validated topic stat
 
 2. **Mode A — INTERROGATE.** Spawn the `strategist` agent via `Task`. Pass:
    - The absolute workspace path (`WORKSPACE_PATH`).
+   - Whether a research depth has already been set: `DEPTH_OVERRIDE = "<value>"` if non-null, or `DEPTH_OVERRIDE = null` (the strategist will append a depth question only when null).
    - Instruction: "Run in INTERROGATE mode. Read `00-pitch.md`, compose 3–5 Socratic questions, and write `01-strategy-questions.md`. Do not produce `01-strategy.md` yet."
 
 3. Read `01-strategy-questions.md` from the workspace. Pose the questions to the user via `AskUserQuestion`. You may batch them into a single multi-question call if they are independent; ask sequentially if later questions depend on earlier answers.
+
+   If the question plan contains a `[OPERATIONAL]` depth question, present its four valid answers as `AskUserQuestion` options. If the user picks `none`, immediately pose the `None mode` follow-up question (also as `AskUserQuestion`, with options `model_knowledge` and `user_supplied`). If they pick `user_supplied`, prompt them to paste the material and save it to `<WORKSPACE_PATH>/03-research/user-supplied.md` (create the `03-research` directory first if needed).
 
 4. Write the user's answers to `01-strategy-answers.md` in the workspace, mirroring the question structure (Q1 / answer, Q2 / answer, …).
 
@@ -265,6 +282,29 @@ Spawn the Strategist to interrogate the pitch and produce a validated topic stat
      - Rationale: <why this is ready to advance>
      ```
    - Update session-state.json: set `stage` to `"ARCHITECTURE"`.
+
+11. **Resolve research depth and write to session state.** This happens once, at the end of STRATEGY, before any subsequent stage runs. The resolved depth is **sticky for the rest of the session**.
+
+   Resolution order (first hit wins):
+   - If `DEPTH_OVERRIDE` is one of `none|quick|standard|deep` → use it. Set `research.depth_source = "flag"`.
+   - Else if `01-strategy.md` contains a `Depth:` field from the Strategist (one of the four values) → use it. Set `research.depth_source = "strategist"`.
+   - Else → `"deep"`. Set `research.depth_source = "default"`.
+
+   If the resolved depth is `none`, also capture `research.none_mode`:
+   - If `01-strategy.md` contains a `None mode:` field (`model_knowledge` or `user_supplied`), use it.
+   - If `DEPTH_OVERRIDE == "none"` and the Strategist did not capture a sub-mode (because no interrogation occurred on the depth question), use `AskUserQuestion` now to ask: "You set `--depth none`. Should I write from (a) your supplied source material, or (b) model knowledge only?" If `user_supplied`, ask the user to paste the material and write it to `<WORKSPACE_PATH>/03-research/user-supplied.md`; set `research.user_supplied_path` to that path.
+   - Default if still unset: `model_knowledge`.
+
+   Write all resolved fields to `session-state.json` under the `research` object.
+
+   Append to session-log.md:
+   ```
+   ## [DECISION] Research depth resolved
+   - Timestamp: <ISO timestamp>
+   - Depth: <none|quick|standard|deep>
+   - Source: <flag|strategist|default>
+   - None mode: <model_knowledge|user_supplied|n/a>
+   ```
 
 **Transition:** Proceed to ARCHITECTURE.
 
@@ -404,7 +444,7 @@ Present the brief to the user for approval. This is a mandatory gate -- the user
 
 ### STAGE: RESEARCH
 
-Spawn the Research Lead to coordinate specialist researchers and produce a unified research package.
+Spawn the Research Lead to coordinate specialist researchers and produce a unified research package. **Behavior depends on `research.depth`** from `session-state.json` (resolved at the end of STRATEGY).
 
 **Actions:**
 
@@ -412,33 +452,127 @@ Spawn the Research Lead to coordinate specialist researchers and produce a unifi
    ```
    ## [TRANSITION] Entering RESEARCH stage
    - Timestamp: <ISO timestamp>
+   - Depth: <research.depth from session-state.json>
    ```
 
 2. Update session-state.json: set `stage` to `"RESEARCH"`.
 
 3. Create the research directory: use `Bash` to run `mkdir -p <WORKSPACE_PATH>/03-research`.
 
-4. **Read `02-brief.md`** and identify the research requirements. Decompose them into four discrete assignments, one per researcher:
+4. **Branch on depth.**
+
+#### Depth = `none`
+
+No researchers are spawned. The Research Lead is not spawned. Produce stub artifacts so downstream stages (WRITING, FACT_CHECK) read a consistent interface:
+
+- If `research.none_mode == "user_supplied"`:
+  - Confirm `<WORKSPACE_PATH>/03-research/user-supplied.md` exists (it was written during STRATEGY's depth resolution).
+  - Write `<WORKSPACE_PATH>/03-research/research-package.md` containing:
+    ```
+    # Research Package — Depth: none (user_supplied)
+
+    No web research was conducted for this article. The journalist will work from the brief and the user-supplied source material at `03-research/user-supplied.md`.
+
+    See `03-research/user-supplied.md` for all source material.
+    ```
+  - Write `<WORKSPACE_PATH>/03-research/sources.md` containing a single entry pointing to `user-supplied.md`.
+  - Write `<WORKSPACE_PATH>/03-research/gaps.md` containing: "No external research conducted. Any claim not supported by the user-supplied material is unverified."
+- If `research.none_mode == "model_knowledge"`:
+  - Write `<WORKSPACE_PATH>/03-research/research-package.md` containing:
+    ```
+    # Research Package — Depth: none (model_knowledge)
+
+    No external research was conducted. The journalist will write from the brief and the model's own knowledge. The fact-checker will flag all empirical claims as "unverified — no research conducted".
+    ```
+  - Write a near-empty `sources.md` (header + "No sources — no research conducted.") and `gaps.md` (header + "No external research conducted. All empirical claims are unverified.").
+
+Append to session-log.md:
+```
+## [DECISION] Skipping research — depth = none
+- Timestamp: <ISO timestamp>
+- None mode: <model_knowledge|user_supplied>
+```
+
+Then skip directly to WRITING (do not run RESEARCH_GATE). Update session-state.json: set `stage` to `"WRITING"`, set `gates.research_reviewed` to `true`.
+
+#### Depth = `quick`
+
+Spawn **only** the data-researcher and industry-researcher. Drop counter-argument and commentary researchers entirely.
+
+4q. **Read `02-brief.md`** and identify the research requirements. Decompose them into two discrete assignments:
+   - **Data Researcher:** the 2–3 most critical metrics for this piece. Be ruthless about what's essential.
+   - **Industry Researcher:** the 2–3 most relevant players or trends. No exhaustive landscape mapping.
+
+5q. **Spawn both researchers in parallel.** Issue both `Task` calls in a **single assistant message**. For each Task prompt, include everything listed under the standard depth's step 5 PLUS a Budget block (verbatim):
+
+```
+### Budget
+- Max searches: 2
+- Max sources: 6
+- Stop once either limit is reached, even if more avenues remain. Prioritize highest-signal facts over comprehensiveness.
+```
+
+6q. Wait for both researchers to complete. Write empty placeholder files for the dropped researchers so downstream readers don't break:
+- `<WORKSPACE_PATH>/03-research/counter-arguments.md` — one-line note: "Skipped at depth=quick."
+- `<WORKSPACE_PATH>/03-research/commentary-research.md` — one-line note: "Skipped at depth=quick."
+
+7q. **Spawn the `research-lead` agent (synthesis-only)** as described in the standard flow, but include a Budget block (verbatim) in the Task prompt:
+
+```
+### Budget
+- Depth: quick.
+- Synthesise from the two available researcher outputs (data, industry). The counter-argument and commentary files are placeholders; do not treat them as content.
+- Produce a terse research-package.md: lead with top 5–8 facts only. Skip redundant context. Keep gaps.md to one or two lines.
+```
+
+#### Depth = `standard`
+
+Spawn all four researchers. Same flow as `deep` below, except include this Budget block (verbatim) in each researcher Task prompt and in the research-lead Task prompt:
+
+```
+### Budget
+- Max searches: 4
+- Max sources: 12
+- Stop once either limit is reached. Prioritize quality and recency over breadth.
+```
+
+For the research-lead, the Budget block reads:
+
+```
+### Budget
+- Depth: standard.
+- Produce a balanced research-package.md: include the strongest evidence from each researcher, dedupe aggressively, keep the package readable in one sitting.
+```
+
+#### Depth = `deep`
+
+Original (unbounded) behavior. **No Budget block is passed** to any researcher or to the research-lead.
+
+#### Common flow (quick / standard / deep)
+
+4. **Read `02-brief.md`** and identify the research requirements. Decompose them into discrete assignments (two at `quick`, four at `standard`/`deep`):
    - **Data Researcher:** statistics, data points, market figures, benchmarks, quantitative evidence. Be specific about which metrics matter.
    - **Industry Researcher:** competitive landscape, key players, trends, analyst perspectives, industry dynamics. Be specific about domain and players.
-   - **Counter-Argument Researcher:** the thesis to challenge, likely areas of weakness or controversy, what counter-evidence to seek.
-   - **Commentary Researcher:** what kinds of experts (practitioners, academics, analysts), what perspectives matter.
+   - **Counter-Argument Researcher** (standard/deep only): the thesis to challenge, likely areas of weakness or controversy, what counter-evidence to seek.
+   - **Commentary Researcher** (standard/deep only): what kinds of experts (practitioners, academics, analysts), what perspectives matter.
 
-5. **Spawn all four researchers in parallel.** Issue all four `Task` calls in a **single assistant message** so they run concurrently. For each Task prompt, literally include:
+5. **Spawn researchers in parallel.** Issue all `Task` calls in a **single assistant message** so they run concurrently. For each Task prompt, literally include:
    - The **absolute workspace path** (e.g. `/Users/.../newsroom/workspaces/2026-04-14-topic-slug`).
    - The article's thesis and topic (for context).
    - The specific research assignment for that researcher (from step 4).
+   - The depth-appropriate **Budget block** (see the depth subsections above; omit at `deep`).
    - The **absolute output path** the researcher must write to:
      - `newsroom:data-researcher` → `<WORKSPACE_PATH>/03-research/data-research.md`
      - `newsroom:industry-researcher` → `<WORKSPACE_PATH>/03-research/industry-research.md`
      - `newsroom:counter-argument-researcher` → `<WORKSPACE_PATH>/03-research/counter-arguments.md`
      - `newsroom:commentary-researcher` → `<WORKSPACE_PATH>/03-research/commentary-research.md`
 
-6. Wait for all four researchers to complete.
+6. Wait for all researchers to complete. (At `quick`, also write the two placeholder files described in step 6q above.)
 
 7. **Spawn the `research-lead` agent (synthesis-only)** via `Task`. Pass:
    - The absolute workspace path.
-   - The four researcher output paths (from step 5).
+   - The four researcher output paths (from step 5; at `quick`, the counter-arg and commentary files are placeholders).
+   - The depth-appropriate Budget block (omit at `deep`).
    - Instruct it to read all four research files, compare findings, flag conflicts, guard against confirmation bias, and write the synthesised package.
    - The three absolute output paths it must produce:
      - `<WORKSPACE_PATH>/03-research/research-package.md`

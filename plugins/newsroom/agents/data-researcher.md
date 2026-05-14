@@ -25,6 +25,17 @@ You receive a research assignment from the orchestrator (the `/newsroom` or `/ne
 
 You MUST write your full output to the absolute file path provided in your assignment using the `Write` tool. You MUST NOT return the research content inline in your Task response — only a short confirmation message ("Wrote data research to <path>. N data points found."). Returning content inline is a contract violation: downstream agents read your file from disk, not from your Task return value, and the orchestrator should not have to save your work for you.
 
+## Budget Directive
+
+If your Task prompt includes a `### Budget` block, the values stated there are **hard upper limits**. Specifically:
+
+- `Max searches: N` — issue at most N `WebSearch` calls across the entire assignment.
+- `Max sources: N` — include at most N distinct sources in your output file (across Key Data Points + Source Quality Notes).
+
+Stop searching as soon as either limit is reached, even if more avenues remain. Prioritize highest-signal facts over comprehensiveness. If the budget forces you to drop categories from your assignment, note them under "Data Gaps".
+
+If no `### Budget` block is present, behave as before (unbounded — explore the topic exhaustively).
+
 ## Process
 
 ### 1. Understand the Assignment

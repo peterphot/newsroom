@@ -102,6 +102,20 @@ For each template field that is **not** advisory:
 - Compute the set of agents that cover it. An agent covers a field if it declares the field's exact slug, OR (when the field is at level 3) if it declares the parent slug at level 2.
 - If no agent covers the field → WARNING (`<namespace>.<slug> in <template_filename> is not consumed by any agent (orphan)`).
 
+### 5b. Budget Directive Contract (Errors)
+
+The Editor passes a `### Budget` block to researchers at `quick` and `standard` depths. Each researcher and the research-lead must document how they honor this block, otherwise the contract is broken and budgets will be silently ignored.
+
+For each of these agents:
+
+- `data-researcher.md`
+- `industry-researcher.md`
+- `counter-argument-researcher.md`
+- `commentary-researcher.md`
+- `research-lead.md`
+
+Check that the file body contains a `## Budget Directive` heading (case-sensitive). If missing → ERROR (`agent <name> is missing the "## Budget Directive" section — research depth budgets will not be honored`).
+
 ### 6. Render the Report
 
 Print the report in this format. Use Markdown so it reads cleanly in the CLI.
