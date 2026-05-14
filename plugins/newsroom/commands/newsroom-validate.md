@@ -102,6 +102,21 @@ For each template field that is **not** advisory:
 - Compute the set of agents that cover it. An agent covers a field if it declares the field's exact slug, OR (when the field is at level 3) if it declares the parent slug at level 2.
 - If no agent covers the field → WARNING (`<namespace>.<slug> in <template_filename> is not consumed by any agent (orphan)`).
 
+### 5a. Autopilot Workflow Files (Errors)
+
+The autopilot mode (introduced in v1.6) requires three bundled files:
+
+- `${CLAUDE_PLUGIN_ROOT}/references/autopilot-workflow.md` — the workflow spec the `/newsroom-auto` command hands control to.
+- `${CLAUDE_PLUGIN_ROOT}/references/autopilot-inputs-template.md` — the user-facing template for the inputs file.
+- `${CLAUDE_PLUGIN_ROOT}/commands/newsroom-auto.md` — the entry-point command.
+
+For each: if the file does not exist → ERROR (`autopilot file missing: <path>`).
+
+Additionally, the architect and fact-checker must handle autopilot mode. Static check:
+
+- `${CLAUDE_PLUGIN_ROOT}/agents/architect.md` must contain a heading `## Autopilot Mode` (case-sensitive). If missing → ERROR (`agent architect.md is missing the "## Autopilot Mode" section — autopilot brief synthesis will not be routed correctly`).
+- `${CLAUDE_PLUGIN_ROOT}/agents/fact-checker.md` must contain a heading `## Autopilot (transcript) mode` (case-sensitive). If missing → ERROR (`agent fact-checker.md is missing the "## Autopilot (transcript) mode" section — autopilot fact-checking will not be routed correctly`).
+
 ### 5b. Budget Directive Contract (Errors)
 
 The Editor passes a `### Budget` block to researchers at `quick` and `standard` depths. Each researcher and the research-lead must document how they honor this block, otherwise the contract is broken and budgets will be silently ignored.
