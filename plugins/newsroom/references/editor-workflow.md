@@ -165,6 +165,7 @@ When you spawn a specialist:
 - Pass the **absolute workspace path** in the Task prompt — specialists cannot see this file and have no other way to learn the path.
 - Pass the **absolute paths of any input files** the specialist needs to read.
 - Pass the **absolute path of the output file** the specialist must write.
+- Include the **disk-output contract** in every Task prompt, even if the agent's own prompt already states it: *"You MUST write your full output to <absolute path> using the `Write` tool. You MUST NOT return the output content inline in your Task response — only a short confirmation message. Downstream agents read your file from disk."* Subagents have been observed returning content inline despite their own prompts saying otherwise; restating the contract in the Task message closes that loophole.
 - Do NOT pre-read agent definition files. The Task tool loads them automatically via `subagent_type`.
 
 When you need to spawn **multiple independent specialists in parallel** (e.g. the four researchers), issue **all Task calls in a single assistant message**. Sequential Task calls in separate messages execute serially.
