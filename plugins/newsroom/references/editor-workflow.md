@@ -48,6 +48,7 @@ Create `session-state.json` in the workspace directory with this initial schema:
 {
   "stage": "PITCH",
   "revision_count": 0,
+  "fact_check_pass": 0,
   "journalist": null,
   "publication_config_path": "<PUBLICATION_CONFIG_PATH>",
   "content_type_path": "<CONTENT_TYPE_PATH>",
@@ -660,7 +661,7 @@ The Editor-Journalist revision loop. You review the current draft, provide feedb
       - Handle the user's response:
         - **Accept:** Proceed to FACT_CHECK with the current draft.
         - **Continue:** Reset `revision_count` to `0`, take the user's guidance, spawn Journalist again. Return to top of REVISION_LOOP.
-        - **Start fresh:** Reset `revision_count` to `0`, return to WRITING stage.
+        - **Start fresh:** Reset `revision_count` to `0`, return to WRITING stage. **Note:** This will overwrite `04-draft-v1.md` with a new first draft from the Journalist. The prior draft chain (v1, v2, v3) is discarded. Inform the user of this before proceeding so they understand they are abandoning the existing draft chain.
 
    **If the draft is satisfactory:**
 
@@ -733,20 +734,18 @@ Handle fact-check results. If there are failures, send the draft back to the Jou
 
 **If fact-check has any `[FAIL]` items:**
 
-1. Read `fact_check_pass` from session-state.json. If `fact_check_pass >= 2`, log a warning and proceed to FINALIZATION (do not loop indefinitely). Escalate remaining issues to the user at the FINAL_GATE.
+1. Read `fact_check_pass` from session-state.json. Increment `fact_check_pass` and write the new value to disk before evaluating the cap. After two journalist re-spawn attempts (i.e. `fact_check_pass >= 2` after the increment), the cap is reached: log a warning and proceed to FINALIZATION (do not loop indefinitely). Escalate remaining issues to the user at the FINAL_GATE. "Two passes" means two journalist re-spawn attempts -- the original fact-check pass that produced these failures does not count toward the cap.
 
 2. Append to session-log.md:
    ```
    ## [DECISION] Fact-check failures found -- sending back to journalist
    - Timestamp: <ISO timestamp>
-   - Fact-check pass: <fact_check_pass + 1>
+   - Fact-check pass: <fact_check_pass>
    - Failed claims: <list of failed claims>
    - Action: Journalist must fix all [FAIL] items
    ```
 
-3. Increment `fact_check_pass` in session-state.json and write to disk.
-
-4. Spawn the `journalist` agent via `Task` with:
+3. Spawn the `journalist` agent via `Task` with:
    - The workspace path
    - The brief and research package paths
    - The fact-check report (`05-fact-check.md`) as feedback
@@ -754,14 +753,14 @@ Handle fact-check results. If there are failures, send the draft back to the Jou
    - The voice profile path: `newsroom/journalists/{JOURNALIST_NAME}.md`
    - Specific instruction: "Fix all [FAIL] items from the fact-check report. Remove or correct unsupported claims. Do not introduce new unsupported claims."
 
-5. Wait for the Journalist to complete. Read the new draft.
+4. Wait for the Journalist to complete. Read the new draft.
 
-6. Re-run the fact-checker on the revised draft:
+5. Re-run the fact-checker on the revised draft:
    - Spawn the `fact-checker` agent again via `Task` with the new draft version.
    - Read the new `05-fact-check.md`.
    - If `[FAIL]` items remain, return to step 1 of this section (the `fact_check_pass` counter prevents infinite loops).
 
-7. Update session-state.json: set `stage` to `"FINALIZATION"`.
+6. Update session-state.json: set `stage` to `"FINALIZATION"`.
 
 **If fact-check has only `[PASS]` and `[FLAG]` items (no failures):**
 
@@ -863,9 +862,10 @@ Present the final article to the user for sign-off. This is a mandatory gate -- 
      - Timestamp: <ISO timestamp>
      - User feedback: <what the user said>
      ```
-   - Pass the user's feedback to the Journalist. Return to WRITING stage with the user's specific edit requests.
-   - Reset `revision_count` to `0` in session-state.json.
-   - Update session-state.json: set `stage` to `"WRITING"`.
+   - Final edits are craft-level adjustments to an already-finalised draft; they run through the REVISION_LOOP rather than a fresh WRITING pass. The existing draft chain is preserved, and the new revision continues version numbering from the latest existing draft (i.e. the next draft is `04-draft-v<latest+1>.md`).
+   - Reset `revision_count` to `0` in session-state.json to give a fresh 3-round budget for the final-edit pass. Do not discard prior drafts.
+   - Update session-state.json: set `stage` to `"REVISION_LOOP"`.
+   - Carry the user's feedback into REVISION_LOOP as the feedback for the next round; when REVISION_LOOP spawns the Journalist, it will continue the version chain from the latest existing draft.
 
 8. **If user wants to hold:**
    - Append to session-log.md:

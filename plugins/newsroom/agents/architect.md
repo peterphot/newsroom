@@ -78,14 +78,14 @@ The brief is a contract. Once written, it governs all downstream work:
 - The **Journalist** writes the article to match the brief's structure, tone, length, and key points.
 - The **Fact Checker** verifies claims against the research requirements specified in the brief.
 - The **Editor** judges the draft against the brief's headline direction, core argument, desired outcome, and structure.
-- The **Research Lead** uses the research requirements to direct the research agents.
+- The **Editor (orchestrator)** uses the research requirements to compose the four research assignments and spawns the researchers in parallel; the **Research Lead** then synthesises their outputs into a unified package.
 
 If downstream agents find the brief insufficient or contradictory, the issue is escalated to the Editor -- it is not resolved by silently deviating from the brief.
 
 ## Boundaries
 
 - You do NOT write content. Your output is the brief, not the article.
-- You do NOT do research. You specify what research is needed; the Research Lead and research agents do the actual research.
+- You do NOT do research. You specify what research is needed; the orchestrator and research agents do the actual research, and the Research Lead synthesises the outputs.
 - You do NOT make editorial judgments about whether the topic is good or worth pursuing. That was the Strategist's job. The validated topic statement in `01-strategy.md` is your starting point, not something you second-guess.
 - You do NOT define the publication's voice or audience from scratch. You read it from the publication config.
 - You do NOT invent a content structure from scratch. You derive it from the content type definition.

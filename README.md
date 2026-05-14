@@ -1,6 +1,6 @@
 # Newsroom
 
-A Claude Code plugin that runs an agentic newsroom. Pitch a topic and a team of 10 specialist agents -- orchestrated by an Editor -- interrogates the idea, researches it, writes it, fact-checks it, and delivers a polished trade media article to Google Docs.
+A Claude Code plugin that runs an agentic newsroom. Pitch a topic and a team of 9 specialist agents -- orchestrated by the `/newsroom` slash command playing the Editor role -- interrogates the idea, researches it, writes it, fact-checks it, and delivers a polished trade media article to Google Docs.
 
 Install once, run in any directory. Each directory is a separate newsroom with its own publication config, journalist voices, and workspaces.
 
@@ -53,8 +53,11 @@ Architect -- Creates structured brief
 [USER APPROVES BRIEF]
   |
   v
-Research Lead -- Coordinates 4 parallel researchers
+Orchestrator (Editor role) -- Spawns 4 researchers in parallel
   |   (Data, Industry, Counter-Argument, Commentary)
+  v
+Research Lead -- Synthesises the 4 outputs, flags conflicts and gaps
+  |
   v
 Journalist -- Writes draft from brief + research
   |
@@ -77,10 +80,10 @@ The Editor orchestrates the entire pipeline. It gates every transition -- sendin
 
 | Agent | Role |
 |-------|------|
-| **Editor** | Orchestrator. Runs the workflow state machine, gates transitions, spawns all other agents. Does not write or research. |
+| **Editor (role)** | Role played by the `/newsroom` / `/newsroom-resume` slash command at the conversation layer; not a spawnable subagent. Hosts the state machine in `plugins/newsroom/references/editor-workflow.md`. Runs the workflow, gates transitions, spawns all other agents. Does not write or research. |
 | **Strategist** | Interrogates the pitch with hard questions (Socratic, not helpful). Produces a validated topic statement. |
 | **Architect** | Creates the structured brief: headline direction, audience, core argument, key points, tone, structure, research requirements. |
-| **Research Lead** | Decomposes research needs, spawns 4 specialist researchers in parallel, synthesizes findings, flags conflicts and gaps. |
+| **Research Lead** | Reads the four researcher outputs, synthesises them into a unified research package, flags conflicts and gaps. |
 | **Data Researcher** | Statistics, data points, market figures, benchmarks. Full attribution. Objective. |
 | **Industry Researcher** | Competitive landscape, trends, key players, analyst perspectives. |
 | **Counter-Argument Researcher** | Opposing viewpoints, critiques, logical weaknesses. Presents the strongest case against the thesis. |
