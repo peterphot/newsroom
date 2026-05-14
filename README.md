@@ -123,7 +123,7 @@ Example setup for two brands:
 ```
 .claude-plugin/plugin.json       # Plugin metadata
 commands/                        # Slash commands
-agents/                          # Agent prompts (10 files)
+agents/                          # Agent prompts (9 files)
 references/                      # Bundled templates
   publication-template.md        # Example publication config
   trade-media-article.md         # Default content type definition
