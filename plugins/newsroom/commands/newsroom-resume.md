@@ -33,26 +33,56 @@ Read `session-state.json` from the workspace directory using `Read`:
 If `session-state.json` does not exist or cannot be read, tell the user: "Session state not found. This workspace may be corrupted." Then stop.
 
 Parse the JSON to determine:
-- The current stage (e.g., PITCH, STRATEGY, ARCHITECTURE, RESEARCH, WRITING, FACT_CHECK, FINALIZATION, etc.)
-- Any other relevant state (revision count, journalist profile, publication config path, content type path, research depth, etc.)
+- The `mode` field (`"autopilot"` or absent/`"guided"`). This determines which workflow spec to load (see Step 4).
+- The current stage (e.g., PITCH, STRATEGY, ARCHITECTURE, RESEARCH, WRITING, FACT_CHECK, FINALIZATION for guided; INGEST, RESEARCH_QUICK, SYNTHESIZE_BRIEF, WRITING, INTERNAL_REVIEW, FACT_CHECK, FINALIZATION, FINAL_GATE, DELIVER for autopilot).
+- Any other relevant state (revision count, journalist profile, publication config path, content type path, research depth, autopilot block, etc.)
 
-If the user passed a `--depth` flag to `/newsroom-resume`, ignore it and warn them: "`--depth` is ignored on resume — research depth is sticky once a session starts. Continuing with depth `<research.depth from session-state.json>`." Depth can only be changed by starting a new session with `/newsroom`.
+If the user passed a `--depth` flag to `/newsroom-resume`, ignore it and warn them. Branch on `mode`:
+
+- If `mode == "autopilot"`: warn "`--depth` does not apply in autopilot mode. Autopilot uses `--research quick` (set at session start) — research enablement is sticky across resume. Flag ignored."
+- Otherwise (guided): warn "`--depth` is ignored on resume — research depth is sticky once a session starts. Continuing with depth `<research.depth from session-state.json>`."
+
+Depth (guided) and research enablement (autopilot) can only be changed by starting a new session with `/newsroom` or `/newsroom-auto`.
 
 If `content_type_path` is absent from session-state.json, this is a pre-content-type-selection workspace. Do not prompt the user — the Editor will fall back to `newsroom/content-types/trade-media-article.md` and log a `[WARN]` entry on its own.
 
 ## Step 3: Report to user
 
-Tell the user which workspace is being resumed and from which stage. Include the research depth if one is recorded. For example:
+Tell the user which workspace is being resumed, which mode it's in, and from which stage. For example:
 
-> Resuming newsroom session from workspace `newsroom/workspaces/2026-04-13-ai-marketing-trends/` at stage **RESEARCH** (depth: **standard**).
+> Resuming newsroom session (**guided**) from workspace `newsroom/workspaces/2026-04-13-ai-marketing-trends/` at stage **RESEARCH** (depth: **standard**).
+
+or
+
+> Resuming newsroom session (**autopilot**) from workspace `newsroom/workspaces/2026-04-13-marketing-shift-auto/` at stage **WRITING**.
 
 If `research.depth` is absent from `session-state.json` (pre-depth-feature workspaces), omit the depth from the message and proceed — the Editor will default to `deep` if it reaches the RESEARCH stage with no depth set.
 
-## Step 4: Run the Editor Workflow in resume mode
+## Step 4: Run the Workflow in resume mode
 
-Read the canonical workflow spec at `${CLAUDE_PLUGIN_ROOT}/references/editor-workflow.md`. From this point on, execute the state machine described in that file **in this same conversation**. You take on the Editor role. Use the following inputs:
+Branch on the `mode` field from `session-state.json`:
 
-- **`WORKSPACE_PATH`:** The absolute path to the workspace resolved in Step 1.
+### If `mode == "autopilot"`
+
+Read the canonical autopilot workflow spec at `${CLAUDE_PLUGIN_ROOT}/references/autopilot-workflow.md`. Execute the state machine described in that file **in this same conversation**. Use the following inputs:
+
+- **`WORKSPACE_PATH`:** The absolute path resolved in Step 1.
+- **`PUBLICATION_CONFIG_PATH`:** Read from `session-state.json` (`publication_config_path` field).
+- **`JOURNALIST_NAME`:** Read from `session-state.json` (`journalist` field).
+- **`CONTENT_TYPE_PATH`:** Read from `session-state.json` (`content_type_path` field).
+- **`AUTOPILOT_INPUTS_PATH`:** Read from `session-state.json` (`autopilot.inputs_path` field).
+- **`RESEARCH_QUICK`:** Read from `session-state.json` (`autopilot.research_enabled` field).
+- **`REVIEW_ENABLED`:** Read from `session-state.json` (`autopilot.review_enabled` field).
+- **`HOLD`:** Read from `session-state.json` (`autopilot.hold` field).
+- **`RESUME_MODE`:** `true`.
+
+Follow the autopilot spec's **Resume Mode** section.
+
+### If `mode != "autopilot"` (guided, or `mode` absent on legacy workspaces)
+
+Read the canonical Editor workflow spec at `${CLAUDE_PLUGIN_ROOT}/references/editor-workflow.md`. Execute the state machine described in that file **in this same conversation**. Use the following inputs:
+
+- **`WORKSPACE_PATH`:** The absolute path resolved in Step 1.
 - **`PUBLICATION_CONFIG_PATH`:** Read from `session-state.json` (`publication_config_path` field). The spec's Resume Mode section governs how to load it.
 - **`JOURNALIST_NAME`:** Read from `session-state.json` (`journalist` field).
 - **`CONTENT_TYPE_PATH`:** Read from `session-state.json` (`content_type_path` field). If absent, the spec's Resume Mode falls back to `newsroom/content-types/trade-media-article.md` and logs a `[WARN]`.

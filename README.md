@@ -1,6 +1,9 @@
 # Newsroom
 
-A Claude Code plugin that runs an agentic newsroom. Pitch a topic and a team of 9 specialist agents -- orchestrated by the `/newsroom` slash command playing the Editor role -- interrogates the idea, researches it, writes it, fact-checks it, and delivers a polished trade media article to Google Docs.
+A Claude Code plugin that runs an agentic newsroom. Two modes:
+
+- **Guided** (`/newsroom`) — pitch a topic and a team of 9 specialist agents interrogates the idea, researches it, writes it, fact-checks it, and delivers a polished trade media article to Google Docs.
+- **Autopilot** (`/newsroom-auto`) — supply the substance up front (key points, killer quotes, timecoded transcript) and the system ships a draft end-to-end with no Socratic interrogation, no brief gate, and no research gate. For users who already did the reporting.
 
 Install once, run in any directory. Each directory is a separate newsroom with its own publication config, journalist voices, and workspaces.
 
@@ -10,6 +13,8 @@ Install once, run in any directory. Each directory is a separate newsroom with i
 - Google Drive MCP configured (for final article push to Google Docs)
 
 ## Quick Start
+
+### Guided mode
 
 ```
 /newsroom
@@ -22,6 +27,28 @@ To use a specific publication and journalist voice:
 ```
 /newsroom --publication acme --journalist jane-smith
 ```
+
+### Autopilot mode
+
+If you already have the source material — key points, killer quotes, a timecoded transcript — skip the interrogation:
+
+```
+/newsroom-auto --inputs ./my-interview.md
+```
+
+`my-interview.md` is a single markdown file with four sections: `## Headline` (optional), `## Key Points`, `## Quotes`, `## Transcript`. The plugin ships a template at `references/autopilot-inputs-template.md` — `/newsroom-auto` will offer to walk you through it interactively if you don't pass `--inputs`.
+
+Autopilot flags:
+
+| Flag | Effect |
+|------|--------|
+| `--inputs <path>` | Single markdown inputs file (Headline / Key Points / Quotes / Transcript) |
+| `--transcript <path>` | Hybrid: supply just the transcript file; collect the rest interactively |
+| `--research quick` | Run a tight data + industry research pass on top of the transcript (off by default) |
+| `--no-review` | Skip the final-approval gate. Fully hands-off run. |
+| `--hold` | Don't publish to Google Docs; save locally only |
+
+The autopilot's contract is *delivery*: no Socratic Q&A, no mid-run gates (except the optional FINAL_GATE), capped at 1 internal revision and 1 fact-check fix. Quality concerns are surfaced in the end-of-run summary, not used to block the run.
 
 ### Research depth
 
@@ -46,8 +73,9 @@ If you don't pass `--depth`, the Strategist will ask you during interrogation. T
 
 | Command | Purpose |
 |---------|---------|
-| `/newsroom [--publication <name>] [--journalist <name>] [--content-type <name>] [--depth <none\|quick\|standard\|deep>]` | Start a new session. Pitch a topic, produce an article. A journalist profile is required (auto-detected if exactly one exists). `--depth` controls research effort (see Research depth below). |
-| `/newsroom-resume [workspace-path]` | Resume an interrupted session. Auto-detects the most recent workspace, or provide a specific path. |
+| `/newsroom [--publication <name>] [--journalist <name>] [--content-type <name>] [--depth <none\|quick\|standard\|deep>]` | Start a new guided session. Pitch a topic, produce an article. A journalist profile is required (auto-detected if exactly one exists). `--depth` controls research effort (see Research depth below). |
+| `/newsroom-auto [--inputs <path>] [--transcript <path>] [--research quick] [--no-review] [--hold] [--publication <name>] [--journalist <name>] [--content-type <name>]` | Start a new autopilot session. Supply key points / killer quotes / timecoded transcript up front; the system ships a draft end-to-end with no Socratic interrogation. |
+| `/newsroom-resume [workspace-path]` | Resume an interrupted session (guided or autopilot — auto-routes based on session state). Auto-detects the most recent workspace, or provide a specific path. |
 | `/newsroom-list` | List all publications, journalists, and content types in the current newsroom, with one-line descriptors. |
 | `/newsroom-validate` | Statically check the contract between bundled templates and agent prompts. Run after editing templates or agent inputs. |
 | `/newsroom-seed-publication <name>` | Create a publication config (mission, voice, audience, tone, scope, byline, distribution, disclosures) from a Socratic interview. |
@@ -58,6 +86,8 @@ If you don't pass `--depth`, the Strategist will ask you during interrogation. T
 | `/newsroom-refine-journalist <name>` | Refine an existing voice profile with new material or corrections. |
 
 ## Workflow
+
+### Guided mode (`/newsroom`)
 
 ```
 Pitch
@@ -94,6 +124,41 @@ Google Docs
 ```
 
 The Editor orchestrates the entire pipeline. It gates every transition -- sending work back if quality is insufficient, escalating strategic decisions to you, and handling craft decisions autonomously.
+
+### Autopilot mode (`/newsroom-auto`)
+
+```
+Inputs file (Headline / Key Points / Quotes / Transcript)
+  |
+  v
+INGEST -- split inputs, soft-warn on quotes not verbatim in transcript
+  |
+  v
+[RESEARCH_QUICK?] -- only if --research quick: data + industry researchers in parallel
+  |
+  v
+SYNTHESIZE_BRIEF -- Architect (autopilot mode), no interrogation, no user gate
+  |
+  v
+WRITING -- Journalist drafts v1 from brief + transcript + quotes
+  |
+  v
+INTERNAL_REVIEW -- silent Editor pass, capped at 1 revision round
+  |
+  v
+FACT_CHECK -- Fact Checker (transcript mode), capped at 1 fix pass
+  |
+  v
+FINALIZATION -- copy latest draft to 06-final.md
+  |
+  v
+[FINAL_GATE?] -- on by default; suppress with --no-review
+  |
+  v
+DELIVER -- Google Docs (unless --hold) + end-of-run summary
+```
+
+The autopilot is built for *delivery*. The user already committed to the angle by writing the key points; the system honors that commitment instead of re-litigating it. Quality concerns that survive the capped review/fix passes are surfaced at the FINAL_GATE (or in the end summary if `--no-review`).
 
 ## The Agents
 
@@ -141,11 +206,14 @@ Example setup for two brands:
 
 ```
 .claude-plugin/plugin.json       # Plugin metadata
-commands/                        # Slash commands
+commands/                        # Slash commands (incl. /newsroom-auto)
 agents/                          # Agent prompts (9 files)
-references/                      # Bundled templates
+references/                      # Bundled templates and workflow specs
   publication-template.md        # Example publication config
   trade-media-article.md         # Default content type definition
+  editor-workflow.md             # Guided workflow state machine
+  autopilot-workflow.md          # Autopilot workflow state machine
+  autopilot-inputs-template.md   # Autopilot inputs file template
 ```
 
 ### Working Directory (created at runtime)
@@ -204,7 +272,9 @@ Journalist profiles seeded by 1.2.x used `####` headings. 1.3.0's validator pars
 
 This is a prompt-engineering project. Every deliverable is a Markdown file -- there is no application code. Each agent is a `.md` system prompt file that Claude Code loads as context.
 
-The `/newsroom` command does minimal setup (scaffolds directories if needed, creates workspace, captures pitch) then loads the canonical workflow spec at `plugins/newsroom/references/editor-workflow.md` and runs the editorial state machine **in the user's primary conversation**. Hosting the orchestrator at the command layer (rather than as a subagent) is required so the `Task` tool is available for spawning specialist subagents — Claude Code does not reliably support nested Task invocation from inside a subagent. The orchestrator (playing the Editor role) spawns specialist subagents one level deep: strategist, architect, the four researchers in parallel, research-lead for synthesis, journalist, and fact-checker. `/newsroom-resume` loads the same spec in resume mode. All inter-agent communication happens via files on disk in the workspace folder.
+The `/newsroom` command does minimal setup (scaffolds directories if needed, creates workspace, captures pitch) then loads the canonical workflow spec at `plugins/newsroom/references/editor-workflow.md` and runs the editorial state machine **in the user's primary conversation**. Hosting the orchestrator at the command layer (rather than as a subagent) is required so the `Task` tool is available for spawning specialist subagents — Claude Code does not reliably support nested Task invocation from inside a subagent. The orchestrator (playing the Editor role) spawns specialist subagents one level deep: strategist, architect, the four researchers in parallel, research-lead for synthesis, journalist, and fact-checker. All inter-agent communication happens via files on disk in the workspace folder.
+
+`/newsroom-auto` follows the same architectural pattern but loads `plugins/newsroom/references/autopilot-workflow.md` instead. It writes `mode: "autopilot"` into `session-state.json`, which (a) lets `/newsroom-resume` route back to the autopilot spec, and (b) triggers the autopilot branches inside `agents/architect.md` (skip strategy, emit a `Must-include quotes` field in the brief) and `agents/fact-checker.md` (transcript-as-source-of-truth verification). The autopilot reuses the existing journalist, data-researcher, industry-researcher, and research-lead agents as-is — only the orchestrator and the two contextual agents (architect, fact-checker) branch on mode.
 
 ## Design Decisions
 
