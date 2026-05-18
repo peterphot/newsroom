@@ -149,6 +149,9 @@ INTERNAL_REVIEW -- silent Editor pass, capped at 1 revision round
 FACT_CHECK -- Fact Checker (transcript mode), capped at 1 fix pass
   |
   v
+FINALIZATION -- copy latest draft to 06-final.md
+  |
+  v
 [FINAL_GATE?] -- on by default; suppress with --no-review
   |
   v

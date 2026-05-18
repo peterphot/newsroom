@@ -37,7 +37,12 @@ Parse the JSON to determine:
 - The current stage (e.g., PITCH, STRATEGY, ARCHITECTURE, RESEARCH, WRITING, FACT_CHECK, FINALIZATION for guided; INGEST, RESEARCH_QUICK, SYNTHESIZE_BRIEF, WRITING, INTERNAL_REVIEW, FACT_CHECK, FINALIZATION, FINAL_GATE, DELIVER for autopilot).
 - Any other relevant state (revision count, journalist profile, publication config path, content type path, research depth, autopilot block, etc.)
 
-If the user passed a `--depth` flag to `/newsroom-resume`, ignore it and warn them: "`--depth` is ignored on resume — research depth is sticky once a session starts. Continuing with depth `<research.depth from session-state.json>`." Depth can only be changed by starting a new session with `/newsroom`.
+If the user passed a `--depth` flag to `/newsroom-resume`, ignore it and warn them. Branch on `mode`:
+
+- If `mode == "autopilot"`: warn "`--depth` does not apply in autopilot mode. Autopilot uses `--research quick` (set at session start) — research enablement is sticky across resume. Flag ignored."
+- Otherwise (guided): warn "`--depth` is ignored on resume — research depth is sticky once a session starts. Continuing with depth `<research.depth from session-state.json>`."
+
+Depth (guided) and research enablement (autopilot) can only be changed by starting a new session with `/newsroom` or `/newsroom-auto`.
 
 If `content_type_path` is absent from session-state.json, this is a pre-content-type-selection workspace. Do not prompt the user — the Editor will fall back to `newsroom/content-types/trade-media-article.md` and log a `[WARN]` entry on its own.
 

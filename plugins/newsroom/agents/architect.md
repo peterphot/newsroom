@@ -99,10 +99,10 @@ When the Task prompt says "Run in AUTOPILOT mode":
    ```
 
 4. **Adjust research requirements.** In autopilot:
-   - If a `03-research/research-package.md` exists (because `--research quick` was passed), reference it the same way you would in guided mode — the Journalist may draw on it for context facts.
+   - If a `03-research/research-package.md` exists (because `--research quick` was passed), reference it the same way you would in guided mode — the Journalist may draw on it for context facts. Do NOT read the raw researcher files (`data-research.md`, `industry-research.md`, `sources.md`, `gaps.md`) or the skip-placeholder files (`counter-arguments.md`, `commentary-research.md`) directly — the research-lead has already synthesised them into `research-package.md`, and reading the raw files duplicates context and risks shaping the brief from unsynthesised material.
    - If no research package exists, replace the "Research requirements" field with a single line: "No external research conducted. The transcript at `03-research/transcript.md` and the quotes at `03-research/quotes.md` are the evidence base." Do NOT specify research the orchestrator will not run — the autopilot does not loop back for more research.
 
-5. **Topical scope check.** Still apply the publication config's Topical Scope rules. If the inputs are clearly out of scope, escalate via a brief note in `02-brief.md` (a `Scope concern:` field at the top) — the Editor will surface this to the user at the FINAL_GATE. Do not halt; the autopilot contract is delivery.
+5. **Topical scope check.** Still apply the publication config's Topical Scope rules. If the inputs are clearly out of scope, escalate via a dedicated `## Scope concern` H2 section in `02-brief.md` — positioned immediately after the headline-direction field. The Editor's FINAL_GATE step in `autopilot-workflow.md` reads this section and surfaces it verbatim to the user before approval. Do not halt; the autopilot contract is delivery.
 
 6. **Length / structure / tone fields:** unchanged. Pull from the content type definition and publication config as in guided mode.
 

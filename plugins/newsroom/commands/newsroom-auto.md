@@ -62,9 +62,11 @@ The autopilot needs a single file at `<WORKSPACE_PATH>/00-autopilot-inputs.md` w
 #### Mode A — `--inputs <path>` was provided
 
 Read the file. Validate that it contains, at minimum:
-- A `## Key Points` heading with at least one non-blank bullet underneath.
-- A `## Quotes` heading with at least one blockquote underneath.
-- A `## Transcript` heading with at least one non-blank line underneath.
+- A `## Key Points` heading (case-insensitive) with at least one non-blank list item underneath. Accept any of `-`, `*`, or `1.`/`1)` as the list marker.
+- A `## Quotes` heading (case-insensitive) with at least one blockquote (line beginning with `> `) underneath.
+- A `## Transcript` heading (case-insensitive) with at least one non-blank line underneath.
+
+Heading matching is case-insensitive on the heading text only — the leading `##` is required, surrounding whitespace and trailing colons are ignored. This is the same rule the INGEST parser at `references/autopilot-workflow.md` uses.
 
 `## Headline` is optional and may be absent or empty.
 
@@ -137,7 +139,11 @@ Before handing off to the workflow, print a single concise message so the user k
 > Final review gate: `<"on (you'll approve before publishing)" if review enabled else "off (--no-review)">`
 > Publish: `<"hold (local only)" if --hold else "Google Docs">`
 >
-> Stages: INGEST → `<RESEARCH_QUICK → >`SYNTHESIZE_BRIEF → WRITING → INTERNAL_REVIEW → FACT_CHECK → `<FINAL_GATE → >`DELIVER
+> Stages: <assemble the line below before printing — do NOT emit literal `<...>` brackets>
+>   - If `--research quick` AND review enabled: `INGEST → RESEARCH_QUICK → SYNTHESIZE_BRIEF → WRITING → INTERNAL_REVIEW → FACT_CHECK → FINALIZATION → FINAL_GATE → DELIVER`
+>   - If `--research quick` AND `--no-review`: same but drop `FINAL_GATE`
+>   - If no research AND review enabled: drop `RESEARCH_QUICK`
+>   - If no research AND `--no-review`: drop both `RESEARCH_QUICK` and `FINAL_GATE`
 >
 > No mid-run questions unless something is wrong.
 

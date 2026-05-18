@@ -138,10 +138,10 @@ Same contract as the guided workflow:
 
 ## Workflow State Machine
 
-The autopilot progresses through five stages (plus an optional research stage and an optional final gate):
+The autopilot progresses through eight unconditional stages plus an optional RESEARCH_QUICK stage and an optional FINAL_GATE:
 
 ```
-INGEST → [RESEARCH_QUICK?] → SYNTHESIZE_BRIEF → WRITING → INTERNAL_REVIEW → FACT_CHECK → [FINAL_GATE?] → DELIVER → COMPLETE
+INGEST → [RESEARCH_QUICK?] → SYNTHESIZE_BRIEF → WRITING → INTERNAL_REVIEW → FACT_CHECK → FINALIZATION → [FINAL_GATE?] → DELIVER → COMPLETE
 ```
 
 ---
@@ -174,7 +174,15 @@ Parse the inputs file into the canonical workspace shape so downstream stages an
    - Write `<WORKSPACE_PATH>/03-research/quotes.md` containing the Quotes section verbatim.
    - Write `<WORKSPACE_PATH>/00-autopilot-inputs.md` as a verbatim copy of the source inputs file (for resume + audit).
 
-5. **Quote verbatim check (soft warn).** For each quote in `03-research/quotes.md`, search `03-research/transcript.md` for the verbatim quote text. If any quote is not found verbatim:
+5. **Quote verbatim check (soft warn).**
+
+   **Canonical quote-text extraction (used here, by the architect, and by the fact-checker — do not invent alternatives):**
+   - A quote, for comparison purposes, is the string inside the outermost `"…"` pair on a blockquote line.
+   - Smart quotes (`"`, `"`, `'`, `'`) normalise to their straight ASCII equivalents (`"` and `'`).
+   - Leading `> ` (blockquote marker) and any surrounding whitespace are stripped.
+   - Lines starting with `—` or a leading `-` immediately after a quote line are attribution lines and are NOT part of the quote text.
+
+   For each quote in `03-research/quotes.md` (extracted per the rule above), search `03-research/transcript.md` for the verbatim quote text. If any quote is not found verbatim:
    - Add it to `session-state.json` under `autopilot.quotes_unverified` (array of strings).
    - Append to session-log.md:
      ```
@@ -475,13 +483,16 @@ Runs only if `REVIEW_ENABLED == true`. Present the final article to the user for
 
 4. Read `autopilot.quotes_unverified` from session-state.json.
 
-5. Use `AskUserQuestion` to present the article:
+5. **Check for an out-of-scope flag.** Read `02-brief.md` and look for a `## Scope concern` H2 section. If present, capture its contents verbatim — they must be surfaced to the user before approval (the architect uses this section as the autopilot's non-blocking out-of-scope signal).
+
+6. Use `AskUserQuestion` to present the article:
 
    > Your article is ready for final review.
    >
    > **Word count:** [N] words
    > **Fact-check status:** [X] pass, [Y] flags, [Z] fails
    > **Quotes flagged as not verbatim in transcript:** [count, or "none"]
+   > **Scope concern (from brief):** [if `## Scope concern` was present in `02-brief.md`, paste its contents verbatim; otherwise omit this line]
    >
    > The full article is at `<WORKSPACE_PATH>/06-final.md`.
    >
@@ -490,15 +501,17 @@ Runs only if `REVIEW_ENABLED == true`. Present the final article to the user for
    > - **Request final edits** — tell me what needs changing
    > - **Hold** — save as final but do not publish
 
-6. **If user approves:** log, set `gates.final_approved = true`, set `stage = "DELIVER"`. Proceed.
+7. **If user approves:** log, set `gates.final_approved = true`, set `stage = "DELIVER"`. Proceed.
 
-7. **If user requests final edits:**
-   - Reset `revision_count` to `0` (fresh budget for final-edit pass).
+8. **If user requests final edits:**
+   - Reset `revision_count` to `0` (fresh internal-review budget for final-edit pass).
+   - Reset `fact_check_pass` to `0` (fresh fact-check fix budget — user-driven edits are the highest-priority change in the run, so the safety net must be replenished).
    - Capture the user's feedback.
    - Set `stage = "INTERNAL_REVIEW"`.
    - Carry the feedback into INTERNAL_REVIEW as the next round's notes. The Journalist will produce `04-draft-v<latest+1>.md`. The autopilot revision cap of 1 still applies for this final-edit pass.
+   - Note: `06-final.md` will be overwritten by FINALIZATION on the second pass.
 
-8. **If user wants to hold:** log, set `gates.final_approved = true`, set `stage = "COMPLETE"`. Skip DELIVER's publish step but still write the end summary.
+9. **If user wants to hold:** log, set `gates.final_approved = true`, set `stage = "COMPLETE"`. Skip DELIVER's publish step but still write the end summary.
 
 ---
 
@@ -593,7 +606,7 @@ Based on the current stage, read the files that have been produced so far so you
 
 | Stage resuming from | Read |
 |---------------------|------|
-| INGEST | `00-autopilot-inputs.md` |
+| INGEST | `00-autopilot-inputs.md`. Resume from INGEST is idempotent — step 4's writes are re-performed (existing files are overwritten), and `autopilot.quotes_unverified` is reset to `[]` before the step-5 check. |
 | RESEARCH_QUICK | All above + `00-pitch.md`, `03-research/transcript.md`, `03-research/quotes.md` |
 | SYNTHESIZE_BRIEF | All above + any existing research files |
 | WRITING | All above + `02-brief.md` |
@@ -606,7 +619,14 @@ Based on the current stage, read the files that have been produced so far so you
 
 ### 4. Jump to the Recorded Stage
 
-Execute the stage indicated by `session-state.json`. For FINAL_GATE on resume, re-present the article to the user (they may not remember context). For WRITING / INTERNAL_REVIEW: if a draft already exists, read it and proceed to INTERNAL_REVIEW rather than re-spawning the Journalist.
+Execute the stage indicated by `session-state.json`. For FINAL_GATE on resume, re-present the article to the user (they may not remember context).
+
+For WRITING / INTERNAL_REVIEW, distinguish the two cases by `revision_count`:
+
+- **Resume from WRITING:** the Journalist had not yet produced or had just produced v1; INTERNAL_REVIEW had not started. If the latest `04-draft-v*.md` exists, advance `stage` to `INTERNAL_REVIEW` and begin review of that draft. If no draft exists, re-spawn the Journalist.
+- **Resume from INTERNAL_REVIEW:** read `revision_count` from session-state. If `revision_count >= 1`, the autopilot cap is already exhausted — immediately advance to `FACT_CHECK` without re-reviewing. Otherwise continue the review loop on the latest draft.
+
+This prevents the cap-of-1 invariant from being broken by re-entering review on resume.
 
 ---
 
